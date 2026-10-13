@@ -184,7 +184,7 @@ export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | nul
 export interface SimulationInput {
   metros: number;
   alerta: number;
-  evacuacion: number;
+  evacuacion: number | null;
   picoLluviaMm: number;
 }
 

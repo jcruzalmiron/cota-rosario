@@ -215,16 +215,15 @@ export default async function OperacionesPage() {
             <section className="hairline px-5 py-6 sm:px-6">
               <h2 className="meta">Simulador de escenarios</h2>
               <div className="mt-4">
-                {rio && hasUsableThresholds(rio.estacion) ? (
+                {rio && lluvia?.picoVentana && hasUsableThresholds(rio.estacion) ? (
                   <Simulator
                     metrosActuales={rio.estacion.metros}
-                    alerta={rio.estacion.alerta ?? 0}
-                    evacuacion={rio.estacion.evacuacion ?? 0}
-                    picoActualMm={lluvia?.picoVentana?.milimetros ?? 0}
-                    lluviaDisponible={Boolean(lluvia)}
+                    alerta={rio.estacion.alerta!}
+                    evacuacion={rio.estacion.evacuacion !== null && rio.estacion.evacuacion > 0 ? rio.estacion.evacuacion : null}
+                    picoActualMm={lluvia.picoVentana.milimetros}
                   />
                 ) : (
-                  <p className="text-xs leading-relaxed text-ink-soft">El simulador necesita una lectura y umbrales utilizables del INA para iniciar el escenario.</p>
+                  <p className="text-xs leading-relaxed text-ink-soft">El simulador necesita altura, umbral de alerta y lluvia utilizables de las fuentes para iniciar el escenario.</p>
                 )}
               </div>
             </section>

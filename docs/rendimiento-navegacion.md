@@ -36,4 +36,6 @@ Se retiró exclusivamente el aporte local `1bba6597-3826-44b6-8f0d-94003cea0a2a`
 
 Build, tipos y lint correctos. No se añadieron ni ejecutaron pruebas unitarias en este ajuste. La revisión de clics y capturas quedó bloqueada por la política del navegador integrado tras el reinicio; la verificación de rendimiento se hizo por HTTP y con las funciones reales de las fuentes.
 
+La revisión de navegador se completó después sobre la pestaña HTTP abierta por el usuario. Sus resultados y la corrección adicional del simulador están en la [revisión de la última versión](verificacion-final-demo.md).
+
 La memoria de fuentes es por proceso; no sincroniza instancias distintas. Un error de fuente mantiene el tratamiento de datos no disponibles. Esta mejora no certifica la precisión de los datos ni modifica los modelos.

@@ -29,3 +29,7 @@ Queda pendiente evaluación humana del producto, validación diaria/semanal/dist
 ## Ajuste de navegación del 13 de octubre
 
 El equipo señaló demora al cambiar de vista y pidió no generar datos dummy. Se midieron las fuentes reales, se paralelizaron consultas y se agregó reutilización acotada de sus respuestas, conservando timestamps. Se retiró el único aporte ficticio de la revisión anterior. Las mediciones, cambios y limitaciones están en [rendimiento de navegación](rendimiento-navegacion.md).
+
+## Comprobación de la última versión
+
+Ante «checkeaste que todo haya quedado bien?», Codex revisó la compilación, tipos, lint, pruebas de lógica, APIs y navegador con fuentes reales. Encontró un desfase entre la referencia actualizada del simulador y sus controles; se corrigió el reinicio de esos controles y se preservaron los datos faltantes sin asumir cero. No se generaron aportes ficticios. Los resultados, el alcance de las pruebas y el error 504 pendiente del histórico largo del INA están en la [revisión de la última versión](verificacion-final-demo.md).

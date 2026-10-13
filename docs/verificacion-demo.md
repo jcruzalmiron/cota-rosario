@@ -4,6 +4,8 @@ Fecha: 13 de octubre de 2026. Windows, Node 22.23.1, Next 16.3.8. Rama `codex/co
 
 Este registro corresponde a la primera mejora, commit `99f9d9d`. El ajuste posterior de navegación y el retiro del aporte ficticio se describen en [rendimiento de navegación](rendimiento-navegacion.md).
 
+La comprobación posterior de esa navegación y la corrección del simulador están en la [revisión de la última versión](verificacion-final-demo.md).
+
 ## Comandos ejecutados
 
 | Control | Resultado |
