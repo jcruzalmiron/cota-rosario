@@ -25,3 +25,7 @@ Las pruebas automáticas cubren fechas y husos, valores faltantes, cobertura, es
 La revisión de navegador y las comprobaciones HTTP locales quedan registradas en [verificación de esta versión](verificacion-demo.md). No se publicaron cambios ni se ejecutó el hook de deploy como parte de esta mejora.
 
 Queda pendiente evaluación humana del producto, validación diaria/semanal/distrital, incertidumbre calibrada, moderación de reportes y operación con más de una instancia.
+
+## Ajuste de navegación del 13 de octubre
+
+El equipo señaló demora al cambiar de vista y pidió no generar datos dummy. Se midieron las fuentes reales, se paralelizaron consultas y se agregó reutilización acotada de sus respuestas, conservando timestamps. Se retiró el único aporte ficticio de la revisión anterior. Las mediciones, cambios y limitaciones están en [rendimiento de navegación](rendimiento-navegacion.md).

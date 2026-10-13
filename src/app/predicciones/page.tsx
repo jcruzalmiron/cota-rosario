@@ -28,8 +28,8 @@ function diasHasta(valor: number | null | undefined): string {
 }
 
 export default async function PrediccionesPage() {
-  const estado = await loadEstado();
-  const predicciones = await loadPredicciones(estado);
+  const estadoPromise = loadEstado();
+  const [estado, predicciones] = await Promise.all([estadoPromise, loadPredicciones(estadoPromise)]);
   const { anegamientos, lluvia, rio, fallas, consultas, vigencia, porDia } = predicciones;
   const fallaDe = (fuente: string) => fallas.find((falla) => falla.fuente === fuente);
   const entrenamiento = (modelos.anegamientos as PoissonModel).entrenamiento;
@@ -127,7 +127,7 @@ export default async function PrediccionesPage() {
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Pronóstico y caudal</dt>
-                  <dd className="text-ink">consulta nueva por vista; controles de cobertura</dd>
+                  <dd className="text-ink">fuentes reales compartidas hasta 60 s; controles de cobertura</dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Última lectura del río</dt>

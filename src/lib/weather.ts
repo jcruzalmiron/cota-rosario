@@ -2,6 +2,7 @@ import { fetchWithRetry } from "@/lib/rain";
 import { ROSARIO } from "@/lib/sources";
 import { sourceTime } from "@/lib/time";
 import { probability, requireRecent } from "@/lib/dataChecks";
+import { readLiveSource } from "@/lib/liveSources";
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const TIMEZONE = "America/Argentina/Buenos_Aires";
@@ -59,6 +60,10 @@ function describe(codigo: number): { descripcion: string; icono: WeatherIcon } {
 }
 
 export async function fetchWeather(): Promise<WeatherNow> {
+  return readLiveSource("openMeteo:clima", fetchWeatherUncached);
+}
+
+async function fetchWeatherUncached(): Promise<WeatherNow> {
   const params = new URLSearchParams({
     latitude: String(ROSARIO.lat),
     longitude: String(ROSARIO.lon),

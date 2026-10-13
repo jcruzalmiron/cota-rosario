@@ -193,9 +193,8 @@ function monthNormal(mes: string): number | null {
   return modelos.lluviaExtrema.climatologiaMensual.find((entry) => entry.mes === numero)?.mediaMm ?? null;
 }
 
-export async function loadKpis(input?: Estado): Promise<Kpis> {
-  const estado = input ?? await loadEstado();
-  const [balanceResult, mesResult, reportesResult] = await Promise.allSettled([fetchRainBalance(), fetchMonthToDateRain(), listReports()]);
+export async function loadKpis(input?: Estado | Promise<Estado>): Promise<Kpis> {
+  const [estado, [balanceResult, mesResult, reportesResult]] = await Promise.all([input ?? loadEstado(), Promise.allSettled([fetchRainBalance(), fetchMonthToDateRain(), listReports()])]);
   const fallas: SourceFailure[] = [...estado.fallas];
   if (balanceResult.status === "rejected") {
     fallas.push(failure("openMeteo", balanceResult.reason));

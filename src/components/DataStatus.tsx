@@ -17,7 +17,7 @@ export function DataStatus({ estado }: { estado: Estado }) {
         {rows.map((row) => <li key={row.name} className="flex items-start justify-between gap-3"><span className="text-ink">{row.name}<span className="mt-0.5 block text-ink-soft">{row.kind}</span></span><span className={row.at ? "readout text-ink-soft" : "text-atencion"}>{row.at ? fechaHoraArgentina(row.at) : "No disponible"}</span></li>)}
       </ul>
       {estado.fallas.length ? <ul className="mt-3 space-y-2 text-xs text-atencion">{estado.fallas.map((failure, i) => <li key={`${failure.fuente}-${i}`}>{failure.mensaje}</li>)}</ul> : null}
-      <p className="mt-3 text-xs text-ink-soft">Disponible indica que pasó controles de formato y vigencia. La precisión del dato depende de la fuente. Las capas cartográficas son instantáneas fijas.</p>
+      <p className="mt-3 text-xs text-ink-soft">Las respuestas reales se reutilizan hasta 60 segundos y conservan su fecha original. Actualizar vuelve a consultar. Disponible indica controles de formato y vigencia; la precisión depende de la fuente. Las capas cartográficas son instantáneas fijas.</p>
     </details>
   );
 }

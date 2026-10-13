@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { refreshSources } from "@/app/actions";
 
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -9,9 +10,14 @@ export function AutoRefresh() {
   const router = useRouter();
 
   useEffect(() => {
-    const refresh = () => {
+    let refreshing = false;
+    const refresh = async () => {
       if (document.visibilityState === "visible") {
-        router.refresh();
+        if (refreshing) return;
+        refreshing = true;
+        try { await refreshSources(); router.refresh(); }
+        catch { /* Keep the current view and its original timestamps if the connection fails. */ }
+        finally { refreshing = false; }
       }
     };
     const interval = window.setInterval(refresh, REFRESH_MS);

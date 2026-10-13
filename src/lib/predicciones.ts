@@ -116,9 +116,8 @@ function buildFlooding(outlook: RainOutlook): FloodingForecast {
   };
 }
 
-export async function loadPredicciones(input?: Estado): Promise<Predicciones> {
-  const estado = input ?? await loadEstado();
-  const [lluviaResult, caudalResult] = await Promise.allSettled([fetchRainOutlook(), fetchDischarge(DISCHARGE_HISTORY_DAYS)]);
+export async function loadPredicciones(input?: Estado | Promise<Estado>): Promise<Predicciones> {
+  const [estado, [lluviaResult, caudalResult]] = await Promise.all([input ?? loadEstado(), Promise.allSettled([fetchRainOutlook(), fetchDischarge(DISCHARGE_HISTORY_DAYS)])]);
   const fallas: SourceFailure[] = estado.fallas.filter((falla) => falla.fuente === "ina");
   if (lluviaResult.status === "rejected") {
     fallas.push(failure("openMeteo", lluviaResult.reason));

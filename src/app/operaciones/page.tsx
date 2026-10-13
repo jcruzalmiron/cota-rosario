@@ -91,8 +91,8 @@ function tilesRedYReportes(kpis: Kpis): KpiTile[] {
 }
 
 export default async function OperacionesPage() {
-  const estado = await loadEstado();
-  const [kpis, predicciones] = await Promise.all([loadKpis(estado), loadPredicciones(estado)]);
+  const estadoPromise = loadEstado();
+  const [estado, kpis, predicciones] = await Promise.all([estadoPromise, loadKpis(estadoPromise), loadPredicciones(estadoPromise)]);
   const { riesgo, rio, lluvia, caudal, clima, fallas } = estado;
   const recomendaciones = buildRecomendaciones({ estado, kpis, predicciones });
   const parte = buildParte({ estado, kpis, predicciones });

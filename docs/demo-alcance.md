@@ -27,7 +27,7 @@ Los umbrales de lluvia y los pesos por zona son reglas de esta demo, sin calibra
 
 ## Contrato y operación
 
-Las vistas y APIs dinámicas consultan sin caché. Abrir una vista, pulsar Actualizar o el refresco de cinco minutos mientras la página está visible vuelve a consultar; no asegura que una fuente haya publicado datos nuevos. Las horas meteorológicas incluyen el desplazamiento UTC devuelto por la fuente.
+Las vistas y APIs dinámicas comparten respuestas reales válidas en memoria durante un máximo de 60 segundos, conservando la fecha de consulta original. Las solicitudes concurrentes a una misma fuente comparten su petición; los errores no se almacenan y al cambiar de hora se recalculan las ventanas. Las respuestas HTTP del panel siguen enviando no-store. Pulsar Actualizar o el refresco de cinco minutos fuerza una nueva consulta; no asegura que una fuente haya publicado datos nuevos. Las horas meteorológicas incluyen el desplazamiento UTC devuelto por la fuente.
 
 Los datos requeridos ausentes no se sustituyen por cero. Se verifica cobertura de 48 horas y siete días consecutivos. `nivel: null`, `incompleto` y `fallas` representan las ausencias. Las APIs usan HTTP 200 para respuestas utilizables, con evaluación parcial explícita, y 503 cuando no hay datos utilizables del bloque; HTTP 206 se reserva para contenido parcial por rangos. `/api/reportes` conserva `ok: false` al fallar. Estas modificaciones cambian el contrato de nulabilidad respecto a la versión anterior.
 

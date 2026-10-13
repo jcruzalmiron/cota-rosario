@@ -1,5 +1,6 @@
 import { INA_STATION } from "@/lib/sources";
 import { requireRecent } from "@/lib/dataChecks";
+import { readLiveSource } from "@/lib/liveSources";
 
 const WFS_BASE = "https://alerta.ina.gob.ar/geoserver/ows";
 const LAYER = "public2:ultimas_alturas_con_timeseries";
@@ -132,6 +133,10 @@ async function getCollection(url: string, etiqueta: string, timeoutMs = INA_TIME
 }
 
 export async function fetchRiver(historyDays: number = HISTORY_DAYS): Promise<RiverSnapshot> {
+  return readLiveSource(`ina:${historyDays}`, () => fetchRiverUncached(historyDays));
+}
+
+async function fetchRiverUncached(historyDays: number): Promise<RiverSnapshot> {
   const [detalle, redCompleta] = await Promise.all([
     getCollection(
       wfsUrl({

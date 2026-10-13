@@ -1,6 +1,7 @@
 import { PARANA_GLOFAS_CELL, ROSARIO } from "@/lib/sources";
 import { addCalendarDays, argentinaDay, sourceTime } from "@/lib/time";
 import { nonNegative, probability } from "@/lib/dataChecks";
+import { readLiveSource } from "@/lib/liveSources";
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const FLOOD_URL = "https://flood-api.open-meteo.com/v1/flood";
@@ -77,11 +78,19 @@ export function rainFromResponse(data: ForecastResponse, now = Date.now()): Rain
 }
 
 export async function fetchRain(): Promise<RainSnapshot> {
+  return readLiveSource("lluvia:48h", fetchRainUncached);
+}
+
+async function fetchRainUncached(): Promise<RainSnapshot> {
   const params = forecastParams({ hourly: "precipitation,precipitation_probability", forecast_days: "3" });
   return rainFromResponse(await (await fetchWithRetry(`${FORECAST_URL}?${params}`, "Open-Meteo")).json());
 }
 
 export async function fetchDischarge(pastDays = 0): Promise<DischargeSnapshot> {
+  return readLiveSource(`glofas:${pastDays}`, () => fetchDischargeUncached(pastDays));
+}
+
+async function fetchDischargeUncached(pastDays: number): Promise<DischargeSnapshot> {
   const params = new URLSearchParams({ latitude: String(PARANA_GLOFAS_CELL.lat), longitude: String(PARANA_GLOFAS_CELL.lon), daily: "river_discharge", forecast_days: "7", past_days: String(Math.max(1, pastDays)) });
   const data = (await (await fetchWithRetry(`${FLOOD_URL}?${params}`, "GloFAS")).json()) as FloodResponse;
   if (!Array.isArray(data.daily?.time) || !Array.isArray(data.daily.river_discharge)) throw new Error("GloFAS no devolvió una serie diaria válida.");
@@ -115,6 +124,10 @@ export function outlookFromResponse(data: ForecastResponse, now = Date.now()): R
 }
 
 export async function fetchRainOutlook(): Promise<RainOutlook> {
+  return readLiveSource("lluvia:7d", fetchRainOutlookUncached);
+}
+
+async function fetchRainOutlookUncached(): Promise<RainOutlook> {
   const params = forecastParams({ hourly: "precipitation", daily: "precipitation_sum,precipitation_probability_max", forecast_days: "7" });
   return outlookFromResponse(await (await fetchWithRetry(`${FORECAST_URL}?${params}`, "Open-Meteo")).json());
 }
@@ -141,6 +154,10 @@ export interface RainBalance {
 export interface MonthRain { mes: string; acumuladoMm: number; diasConDato: number; hasta: string | null; completo: boolean; consultadoEn: string }
 
 export async function fetchRainBalance(): Promise<RainBalance> {
+  return readLiveSource("lluvia:balance", fetchRainBalanceUncached);
+}
+
+async function fetchRainBalanceUncached(): Promise<RainBalance> {
   const params = forecastParams({ hourly: "precipitation,precipitation_probability", past_days: "3", forecast_days: "3" });
   const data = (await (await fetchWithRetry(`${FORECAST_URL}?${params}`, "Open-Meteo")).json()) as ForecastResponse;
   const now = Date.now();
@@ -159,6 +176,10 @@ export async function fetchRainBalance(): Promise<RainBalance> {
 }
 
 export async function fetchMonthToDateRain(): Promise<MonthRain> {
+  return readLiveSource("lluvia:mes", fetchMonthToDateRainUncached);
+}
+
+async function fetchMonthToDateRainUncached(): Promise<MonthRain> {
   const hoy = argentinaDay();
   const params = forecastParams({ start_date: `${hoy.slice(0, 7)}-01`, end_date: hoy, daily: "precipitation_sum" });
   const data = await (await fetchWithRetry(`${ARCHIVE_URL}?${params}`, "Archivo de Open-Meteo")).json() as { daily: { time: string[]; precipitation_sum: (number | null)[] } };

@@ -65,7 +65,7 @@ export const SEMAFORO: Concepto[] = [
 ];
 
 export const PREGUNTAS: Pregunta[] = [
-  { pregunta: "¿Cómo se actualiza?", respuesta: "Al abrir una vista o pulsar Actualizar se consultan las fuentes. Las APIs del panel no se almacenan en caché. También se refresca cada cinco minutos cuando la pestaña está visible. No implica que el organismo publique una medición nueva." },
+  { pregunta: "¿Cómo se actualiza?", respuesta: "Las vistas comparten respuestas reales durante un máximo de 60 segundos, con la fecha original. Actualizar fuerza una nueva consulta. Las APIs del panel siguen enviando no-store al navegador. También se refresca cada cinco minutos cuando la pestaña está visible. No implica que el organismo publique una medición nueva." },
   { pregunta: "¿Por qué hay un bloque sin datos?", respuesta: "La fuente pudo fallar, responder con valores ausentes, devolver un dato fuera de vigencia o no cubrir el período solicitado. El detalle de la fuente permite revisar el motivo." },
   { pregunta: "¿Qué significa no tener reportes?", respuesta: "Que no hay aportes registrados en la ventana consultada. No permite concluir que no haya agua. Si falla el almacenamiento mostramos la consulta como no disponible." },
   { pregunta: "¿Se puede usar para emitir alertas?", respuesta: "Esta versión es una demo. Harían falta contraste local, evaluación del error a la escala de uso, acuerdos con fuentes y protocolos operativos antes de usarla para decisiones o avisos." },
