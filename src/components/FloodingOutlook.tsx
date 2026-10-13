@@ -17,15 +17,15 @@ export function FloodingOutlook({ anegamientos }: FloodingOutlookProps) {
       <div className="flex items-baseline gap-3">
         <span className="readout text-5xl font-medium text-ink">{anegamientos.esperadosCiudad.toFixed(1)}</span>
         <span className="text-sm leading-tight text-ink-soft">
-          anegamientos que Defensa Civil
+          casos ilustrativos del modelo
           <br />
-          tendría que atender en {anegamientos.ventanaDias} días
+          adaptado a {anegamientos.ventanaDias} días
         </span>
       </div>
       <p className="text-xs leading-relaxed text-ink-soft">
         Con <span className="readout text-ink">{anegamientos.lluvia.total} mm</span> pronosticados y un pico de{" "}
         <span className="readout text-ink">{anegamientos.lluvia.max2h} mm</span> en 2 horas. Estimación propia a partir del historial de Defensa Civil y
-        la lluvia que cayó cada mes; el error típico es de ±{Math.round(anegamientos.modelo.validacionCruzada.maeModelo)} casos por mes.
+        la lluvia de cada mes. Error absoluto medio de validación mensual: {anegamientos.modelo.validacionCruzada.maeModelo} casos. Este error no es un intervalo de la semana.
       </p>
       <ul className="flex flex-col gap-2">
         {anegamientos.porDistrito.map((entry) => (
@@ -35,11 +35,10 @@ export function FloodingOutlook({ anegamientos }: FloodingOutlookProps) {
               <span className="block h-full rounded-full bg-alerta/80" style={{ width: `${(entry.esperados / maximo) * PERCENT}%` }} />
             </span>
             <span className="readout w-10 shrink-0 text-right text-ink">{entry.esperados.toFixed(1)}</span>
-            <span className="readout w-12 shrink-0 text-right text-ink-faint">{Math.round(entry.probabilidadAlMenosUno * PERCENT)} %</span>
           </li>
         ))}
       </ul>
-      <p className="meta">esperados · probabilidad de al menos uno</p>
+      <p className="text-xs leading-relaxed text-atencion">Reparto por participación histórica de cada distrito. La escala diaria/semanal y sus probabilidades no están validadas; se muestran para explorar el método.</p>
     </div>
   );
 }

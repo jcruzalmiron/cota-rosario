@@ -310,7 +310,7 @@
       }
     ],
     "lluvia": {
-      "fuente": "Open-Meteo archivo histórico (ERA5), horario",
+      "fuente": "Open-Meteo archivo histórico (modelo no fijado en el snapshot original), horario",
       "endpoint": "https://archive-api.open-meteo.com/v1/archive"
     }
   },
@@ -813,7 +813,7 @@
         }
       }
     ],
-    "fuente": "Open-Meteo archivo histórico (ERA5), diario"
+    "fuente": "Open-Meteo archivo histórico (modelo no fijado en el snapshot original), diario"
   },
   "calculado": "2026-09-23T03:10:53.244Z"
 }

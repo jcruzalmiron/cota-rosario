@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --sheet-peek: 152px;
+  --sheet-peek: 196px;
   --ground: #0b0c0e;
   --panel: #141619;
   --panel-soft: #1b1e22;
@@ -9,8 +9,8 @@
   --rule-soft: #1f2227;
   --edge: rgb(255 255 255 / 0.07);
   --ink: #eceef1;
-  --ink-soft: #9ba0a9;
-  --ink-faint: #6a6f79;
+  --ink-soft: #b0b6c0;
+  --ink-faint: #929aa6;
 
   --water: #5f9bb8;
   --water-deep: #24536a;
@@ -71,7 +71,7 @@ body {
 
   .meta {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     letter-spacing: 0.11em;
     text-transform: uppercase;
     color: var(--ink-faint);

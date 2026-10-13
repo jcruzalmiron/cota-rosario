@@ -31,6 +31,15 @@ export const SOURCES: Record<string, SourceRef> = {
     portal: "https://open-meteo.com",
     licencia: "CC BY 4.0 · gratuito para uso no comercial",
   },
+  clima: {
+    id: "clima",
+    organismo: "Open-Meteo · condiciones modeladas",
+    descripcion: "Temperatura, humedad, presión y lluvia modeladas, con fecha de cobertura",
+    endpoint: "https://api.open-meteo.com/v1/forecast",
+    portal: "https://open-meteo.com/en/docs",
+    licencia: "CC BY 4.0 · gratuito para uso no comercial",
+    modelo: true,
+  },
   glofas: {
     id: "glofas",
     organismo: "GloFAS · Copernicus, vía Open-Meteo",
@@ -50,7 +59,7 @@ export const SOURCES: Record<string, SourceRef> = {
   riesgoClima: {
     id: "riesgoClima",
     organismo: "Municipalidad de Rosario · Mapas de Riesgo Climático 2024",
-    descripcion: "Riesgo de afectación a vivienda y hábitat por precipitaciones torrenciales, por radio censal, en cuatro categorías",
+    descripcion: "Capa fija de riesgo climático de 2024, rasterizada en esta demo; la resolución limita la consulta puntual",
     endpoint: "https://infomapa.rosario.gob.ar/wms/ambiente?LAYERS=riesgo_vivienda_precipita",
     portal: "https://www.rosario.gob.ar/inicio/mapas-de-riesgo-climatico-rosario-2024",
     licencia: "Capa pública de InfoMapa · elaborada con NAP Global Network y la Dirección Nacional de Cambio Climático",
@@ -58,15 +67,15 @@ export const SOURCES: Record<string, SourceRef> = {
   defensaCivil: {
     id: "defensaCivil",
     organismo: "Municipalidad de Rosario · Defensa Civil",
-    descripcion: "Anegamientos transitorios atendidos por distrito y mes, 2021 a 2024, cruzados con la lluvia mensual del archivo de Open-Meteo",
+    descripcion: "Snapshot de anegamientos atendidos por distrito y mes, enero de 2021 a enero de 2024, cruzados con la lluvia mensual del archivo de Open-Meteo",
     endpoint: "https://datosabiertos.rosario.gob.ar/dataset/intervenciones-defensa-civil",
     portal: "https://datosabiertos.rosario.gob.ar",
-    licencia: "Datos abiertos municipales · lluvia histórica ERA5 vía Open-Meteo, CC BY 4.0",
+    licencia: "Datos abiertos municipales · lluvia histórica vía Open-Meteo (modelo no fijado en el snapshot), CC BY 4.0",
   },
   modelos: {
     id: "modelos",
     organismo: "Modelos estadísticos de este panel",
-    descripcion: "Regresión de Poisson de anegamientos contra lluvia, distribución de Gumbel de máximos diarios (ERA5 desde 1940) y curva altura–caudal INA–GloFAS. Cada uno publica su ajuste y su error",
+    descripcion: "Modelos exploratorios: Poisson mensual adaptado a siete días, Gumbel sobre el snapshot histórico de Open-Meteo y ajuste altura–caudal INA–GloFAS. Sin validación operativa",
     endpoint: "/data/modelos.json",
     portal: "/predicciones",
     licencia: "Calculado en este panel sobre datos públicos · no es pronóstico oficial",

@@ -97,6 +97,7 @@ async function fetchMonthlyRain(desde, hasta) {
     start_date: `${desde}-01`,
     end_date: hasta,
     daily: "precipitation_sum",
+    models: "era5",
     timezone: TIMEZONE,
   });
   const response = await fetch(`${ARCHIVE_API}?${params}`);
@@ -104,6 +105,7 @@ async function fetchMonthlyRain(desde, hasta) {
     throw new Error(`Open-Meteo archive devolvió ${response.status}`);
   }
   const { daily } = await response.json();
+  if (!Array.isArray(daily?.time) || daily.time.length === 0 || daily.time.length !== daily.precipitation_sum?.length || daily.precipitation_sum.some((mm) => typeof mm !== "number" || !Number.isFinite(mm) || mm < 0)) throw new Error("El archivo de lluvia tiene valores faltantes o inválidos; no se reconstruye con ceros.");
   return daily.time.reduce((acc, day, index) => {
     const mes = day.slice(0, 7);
     return { ...acc, [mes]: (acc[mes] ?? 0) + (daily.precipitation_sum[index] ?? 0) };

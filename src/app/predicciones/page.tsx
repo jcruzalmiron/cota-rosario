@@ -1,4 +1,5 @@
 import modelos from "../../../public/data/modelos.json";
+import { DataStatus } from "@/components/DataStatus";
 import { AppShell } from "@/components/AppShell";
 import { DailyOutlook } from "@/components/DailyOutlook";
 import { Docs, DocsSection } from "@/components/Docs";
@@ -16,18 +17,19 @@ import { loadEstado } from "@/lib/estado";
 import { loadPredicciones } from "@/lib/predicciones";
 import { horaArgentina } from "@/lib/time";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const CM_PER_M = 100;
 const WEAK_FIT_R2 = 0.5;
 const DEFAULT_WINDOW_DAYS = 7;
 
 function diasHasta(valor: number | null | undefined): string {
-  return valor === null || valor === undefined ? "no a este ritmo" : `en ${valor} días`;
+  return valor === null || valor === undefined ? "sin cruce futuro calculable" : valor > 7 ? `fuera de 7 días (hipótesis: ${valor} d)` : `en ${valor} días`;
 }
 
 export default async function PrediccionesPage() {
-  const [predicciones, estado] = await Promise.all([loadPredicciones(), loadEstado()]);
+  const estado = await loadEstado();
+  const predicciones = await loadPredicciones(estado);
   const { anegamientos, lluvia, rio, fallas, consultas, vigencia, porDia } = predicciones;
   const fallaDe = (fuente: string) => fallas.find((falla) => falla.fuente === fuente);
   const entrenamiento = (modelos.anegamientos as PoissonModel).entrenamiento;
@@ -54,22 +56,27 @@ export default async function PrediccionesPage() {
         <div className="flex flex-col">
           <section className="px-5 py-6 sm:px-6">
             <p className="meta">Próximos {ventanaDias} días{fallas.length ? " · evaluación parcial" : ""}</p>
-            <h1 className="mt-2 text-xl font-semibold tracking-tight text-ink">Qué esperar esta semana</h1>
+            <h1 className="mt-2 text-xl font-semibold tracking-tight text-ink">Explorar los próximos siete días</h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              Cuántos anegamientos tendría que atender Defensa Civil con la lluvia pronosticada, qué tan rara es esa lluvia para Rosario y a dónde va el
-              río. Todo se recalcula con cada pronóstico nuevo.
+              Pronóstico de lluvia, tendencias del río y un escenario ilustrativo construido con registros mensuales. La adaptación por día y distrito no tiene validación operativa.
             </p>
           </section>
 
+          <DataStatus estado={estado} />
+
           <section className="hairline px-5 py-6 sm:px-6">
-            <h2 className="meta">Anegamientos esperados</h2>
-            <div className="mt-4">{anegamientos ? <FloodingOutlook anegamientos={anegamientos} /> : <SourceDown falla={fallaDe("openMeteo")!} />}</div>
+            <h2 className="meta">Escenario ilustrativo de anegamientos</h2>
+            <div className="mt-4">{anegamientos ? <FloodingOutlook anegamientos={anegamientos} /> : <SourceDown falla={fallaDe("modelos") ?? fallaDe("openMeteo")} />}</div>
           </section>
+
+
 
           <section className="hairline px-5 py-6 sm:px-6">
             <h2 className="meta">La lluvia que viene</h2>
             <div className="mt-4">{lluvia ? <RainOutlook lluvia={lluvia} /> : <SourceDown falla={fallaDe("openMeteo")!} />}</div>
           </section>
+
+
 
           <section className="hairline px-5 py-6 sm:px-6">
             <h2 className="meta">A dónde va el río</h2>
@@ -120,7 +127,7 @@ export default async function PrediccionesPage() {
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Pronóstico y caudal</dt>
-                  <dd className="text-ink">en vivo, caché de 5 min</dd>
+                  <dd className="text-ink">consulta nueva por vista; controles de cobertura</dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Última lectura del río</dt>
@@ -128,9 +135,9 @@ export default async function PrediccionesPage() {
                   {rio ? <dd className="meta">serie desde {rio.serieDesde.slice(0, 10)}</dd> : null}
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <dt className="meta">Registro de Defensa Civil publicado hasta</dt>
+                  <dt className="meta">Registro de Defensa Civil incorporado hasta</dt>
                   <dd className="readout text-ink">{vigencia.defensaCivilHasta}</dd>
-                  <dd className="meta">el municipio no publicó más</dd>
+                  <dd className="meta">límite del registro incorporado en esta demo</dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Lluvia histórica hasta</dt>
@@ -164,7 +171,7 @@ export default async function PrediccionesPage() {
           </Docs>
 
           <p className="hairline px-5 py-6 text-xs leading-relaxed text-ink-faint sm:px-6">
-            Son estimaciones estadísticas de este panel, no pronósticos oficiales; ninguna reemplaza al INA ni a Defensa Civil (103).
+            Demo con precisión y cobertura sin garantía operativa. Consultar los organismos responsables para información oficial.
           </p>
         </div>
       }

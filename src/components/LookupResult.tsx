@@ -1,5 +1,5 @@
 import { formatoDistancia, type CategoriaClima, type Hallazgo, type TerrainMeta } from "@/lib/lookup";
-import { RISK_LABEL } from "@/lib/risk";
+import { riskLabel } from "@/lib/risk";
 
 const CLIMA_TEXT: Record<CategoriaClima, string> = {
   "muy bajo": "text-ink",
@@ -33,7 +33,7 @@ export function LookupResult({ hallazgo, terrain }: LookupResultProps) {
       {hallazgo.dentro ? (
         <p className="text-ink">
           Dentro del área inundable oficial zona {hallazgo.zona}. Hoy:{" "}
-          <span className={hallazgo.nivel === "normal" ? "text-normal" : "text-alerta"}>{RISK_LABEL[hallazgo.nivel ?? "normal"].toLowerCase()}</span>.
+          <span className={hallazgo.nivel === "normal" ? "text-normal" : "text-alerta"}>{riskLabel(hallazgo.nivel).toLowerCase()}</span>.
         </p>
       ) : (
         <p className="leading-relaxed text-ink">
@@ -50,14 +50,13 @@ export function LookupResult({ hallazgo, terrain }: LookupResultProps) {
       {hallazgo.clima ? (
         <p className="leading-relaxed text-ink">
           Riesgo por lluvias torrenciales <span className={`${CLIMA_TEXT[hallazgo.clima]} readout`}>{hallazgo.clima}</span>
-          <span className="text-ink-soft"> según el mapa oficial de riesgo de la Municipalidad.</span>
+          <span className="text-ink-soft"> según la capa municipal de riesgo climático 2024, rasterizada para esta demo.</span>
         </p>
       ) : null}
 
       {hallazgo.distrito ? (
         <p className="leading-relaxed text-ink-soft">
-          Este distrito concentra el <span className="readout text-ink">{hallazgo.distrito.participacion} %</span> de los anegamientos que atiende
-          Defensa Civil en la ciudad.
+          En el registro incorporado (2021–enero de 2024), este distrito concentra el <span className="readout text-ink">{hallazgo.distrito.participacion} %</span> de las intervenciones por anegamientos registradas. Esta proporción no indica el riesgo de esta dirección.
           {hallazgo.distrito.mesPico ? (
             <>
               {" "}

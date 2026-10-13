@@ -2,13 +2,14 @@ import distritosGeo from "../../public/data/distritos.json";
 import modelos from "../../public/data/modelos.json";
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import type { SourceFailure, SourceId } from "@/lib/estado";
+import { loadEstado, type Estado } from "@/lib/estado";
 import { trendProjection } from "@/lib/forecast/river";
 import { featureAt } from "@/lib/lookup";
 import { fetchMonthToDateRain, fetchRainBalance, type MonthRain, type RainBalance } from "@/lib/rain";
 import { listReports } from "@/lib/reports";
 import { REPORT_TYPES, type Report, type ReportType } from "@/lib/reportTypes";
 import { hasUsableThresholds } from "@/lib/risk";
-import { fetchRiver, type RiverReading, type RiverSnapshot, type RiverStation } from "@/lib/river";
+import { type RiverReading, type RiverSnapshot, type RiverStation } from "@/lib/river";
 import { mergeRiverHistory } from "@/lib/riverHistory";
 
 const UPSTREAM_CHAIN = ["Corrientes", "Goya", "La Paz", "Santa Fe", "Paraná", "Diamante", "San Lorenzo (San Martín)", "Rosario", "Villa Constitución", "San Nicolás"];
@@ -41,8 +42,10 @@ export interface UpstreamStation {
   alerta: number | null;
   evacuacion: number | null;
   tendencia: string;
-  ocupacionAlerta: number | null;
+  margenAlertaM: number | null;
+  fecha: string;
   esRosario: boolean;
+  esAguasArriba: boolean;
 }
 
 export interface NetworkKpis {
@@ -73,7 +76,7 @@ export interface Kpis {
   aguasArriba: UpstreamStation[];
   red: NetworkKpis | null;
   lluvia: RainKpis | null;
-  reportes: ReportKpis;
+  reportes: ReportKpis | null;
   fallas: SourceFailure[];
   generadoEn: string;
 }
@@ -121,9 +124,14 @@ function buildRiver(rio: RiverSnapshot): RiverKpis | null {
   };
 }
 
+function fresh(fecha: string): boolean {
+  const age = Date.now() - Date.parse(fecha);
+  return Number.isFinite(age) && age >= -900_000 && age <= 48 * 3_600_000;
+}
+
 function buildUpstream(red: RiverStation[]): UpstreamStation[] {
   return UPSTREAM_CHAIN.flatMap((nombre) => {
-    const station = red.find((entry) => entry.nombre === nombre);
+    const station = red.find((entry) => entry.nombre === nombre && fresh(entry.fecha));
     if (!station) {
       return [];
     }
@@ -136,15 +144,17 @@ function buildUpstream(red: RiverStation[]): UpstreamStation[] {
         alerta: usable ? station.alerta : null,
         evacuacion: usable ? station.evacuacion : null,
         tendencia: station.tendencia,
-        ocupacionAlerta: usable && station.alerta ? Math.round((station.metros / station.alerta) * PERCENT) : null,
+        margenAlertaM: usable && station.alerta ? Number((station.alerta - station.metros).toFixed(2)) : null,
+        fecha: station.fecha,
         esRosario: station.nombre === "Rosario",
+        esAguasArriba: UPSTREAM_CHAIN.indexOf(nombre) < UPSTREAM_CHAIN.indexOf("Rosario"),
       },
     ];
   });
 }
 
 function buildNetwork(red: RiverStation[]): NetworkKpis {
-  const conUmbral = red.filter(hasUsableThresholds);
+  const conUmbral = red.filter((station) => fresh(station.fecha) && hasUsableThresholds(station));
   const enAlerta = conUmbral.filter((station) => station.alerta !== null && station.metros >= station.alerta);
   return {
     total: red.length,
@@ -152,7 +162,7 @@ function buildNetwork(red: RiverStation[]): NetworkKpis {
     sobreAlerta: enAlerta.length,
     sobreEvacuacion: conUmbral.filter((station) => station.evacuacion !== null && station.evacuacion > 0 && station.metros >= station.evacuacion).length,
     creciendo: conUmbral.filter((station) => station.tendencia.toLowerCase() === "crece").length,
-    enAlerta: enAlerta.sort((a, b) => b.metros / (b.alerta ?? 1) - a.metros / (a.alerta ?? 1)),
+    enAlerta: enAlerta.sort((a, b) => (a.alerta! - a.metros) - (b.alerta! - b.metros)),
   };
 }
 
@@ -183,26 +193,26 @@ function monthNormal(mes: string): number | null {
   return modelos.lluviaExtrema.climatologiaMensual.find((entry) => entry.mes === numero)?.mediaMm ?? null;
 }
 
-export async function loadKpis(): Promise<Kpis> {
-  const [rioResult, balanceResult, mesResult, reportesResult] = await Promise.allSettled([fetchRiver(), fetchRainBalance(), fetchMonthToDateRain(), listReports()]);
-  const fallas: SourceFailure[] = [];
-  if (rioResult.status === "rejected") {
-    fallas.push(failure("ina", rioResult.reason));
-  }
+export async function loadKpis(input?: Estado): Promise<Kpis> {
+  const estado = input ?? await loadEstado();
+  const [balanceResult, mesResult, reportesResult] = await Promise.allSettled([fetchRainBalance(), fetchMonthToDateRain(), listReports()]);
+  const fallas: SourceFailure[] = [...estado.fallas];
   if (balanceResult.status === "rejected") {
     fallas.push(failure("openMeteo", balanceResult.reason));
   }
-  const rio = rioResult.status === "fulfilled" ? rioResult.value : null;
+  if (mesResult.status === "rejected") fallas.push(failure("openMeteo", mesResult.reason));
+  if (reportesResult.status === "rejected") fallas.push(failure("reportes", reportesResult.reason));
+  const rio = estado.rio;
   const balance = balanceResult.status === "fulfilled" ? balanceResult.value : null;
   const mes = mesResult.status === "fulfilled" ? mesResult.value : null;
-  const reportes = reportesResult.status === "fulfilled" ? reportesResult.value : [];
+  const reportes = reportesResult.status === "fulfilled" ? reportesResult.value : null;
 
   return {
     rio: rio ? buildRiver(rio) : null,
     aguasArriba: rio ? buildUpstream(rio.red) : [],
     red: rio ? buildNetwork(rio.red) : null,
     lluvia: balance ? { balance, mes, mesNormalMm: monthNormal(mes?.mes ?? balance.ahoraLocal) } : null,
-    reportes: buildReports(reportes),
+    reportes: reportes ? buildReports(reportes) : null,
     fallas,
     generadoEn: new Date().toISOString(),
   };

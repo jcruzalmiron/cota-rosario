@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { LogoMark, Wordmark } from "@/components/Logo";
-import { RISK_FILL } from "@/components/status";
-import { RISK_LABEL, type RiskLevel } from "@/lib/risk";
-import { horaArgentina } from "@/lib/time";
+import { riskColor } from "@/components/status";
+import { riskLabel, type RiskLevel } from "@/lib/risk";
+import { fechaHoraArgentina } from "@/lib/time";
+import { RefreshButton } from "@/components/RefreshButton";
 
 const VISTAS = [
   { href: "/", etiqueta: "Vecinos" },
@@ -14,7 +15,7 @@ export const HELP_HREF = "/como-funciona";
 
 interface TopBarProps {
   activo: string;
-  nivel?: RiskLevel;
+  nivel?: RiskLevel | null;
   actualizadoEn?: string;
 }
 
@@ -48,18 +49,18 @@ export function TopBar({ activo, nivel, actualizadoEn }: TopBarProps) {
       </nav>
 
       <div className="flex items-center justify-end gap-2 sm:gap-3">
-        {nivel ? (
+        {actualizadoEn ? <span className="hidden sm:inline-flex"><RefreshButton /></span> : null}
+        {nivel !== undefined ? (
           <span
             className="flex items-center gap-2 rounded-full border border-rule px-2 py-1 sm:px-3"
-            aria-label={`Estado: ${RISK_LABEL[nivel]}${actualizadoEn ? `, actualizado a las ${horaArgentina(actualizadoEn)}` : ""}`}
-            title={actualizadoEn ? `Actualizado a las ${horaArgentina(actualizadoEn)}, hora argentina; se renueva solo cada 5 minutos` : undefined}
+            aria-label={`Estado: ${riskLabel(nivel)}${actualizadoEn ? `, consulta ${fechaHoraArgentina(actualizadoEn)}` : ""}`}
+            title={actualizadoEn ? `Consulta ${fechaHoraArgentina(actualizadoEn)}, hora argentina. Revisá también la fecha de cada fuente.` : undefined}
           >
             <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full opacity-40" style={{ background: RISK_FILL[nivel] }} aria-hidden="true" />
-              <span className="relative inline-flex size-2 rounded-full" style={{ background: RISK_FILL[nivel] }} aria-hidden="true" />
+              <span className="relative inline-flex size-2 rounded-full" style={{ background: riskColor(nivel) }} aria-hidden="true" />
             </span>
-            <span className="hidden text-[13px] text-ink sm:inline">{RISK_LABEL[nivel]}</span>
-            {actualizadoEn ? <span className="readout hidden text-[11px] text-ink-faint md:inline">{horaArgentina(actualizadoEn)}</span> : null}
+            <span className="hidden text-[13px] text-ink lg:inline">{riskLabel(nivel)}</span>
+            {actualizadoEn ? <span className="readout hidden text-xs text-ink-soft xl:inline">{fechaHoraArgentina(actualizadoEn)}</span> : null}
           </span>
         ) : null}
         <Link

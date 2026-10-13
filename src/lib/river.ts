@@ -1,10 +1,10 @@
 import { INA_STATION } from "@/lib/sources";
+import { requireRecent } from "@/lib/dataChecks";
 
 const WFS_BASE = "https://alerta.ina.gob.ar/geoserver/ows";
 const LAYER = "public2:ultimas_alturas_con_timeseries";
 const MAX_FEATURES = 500;
 const HISTORY_DAYS = 14;
-const REVALIDATE_SECONDS = 300;
 const MILLIS_PER_DAY = 86_400_000;
 const INA_TIMEOUT_MS = 30_000;
 const EXCEPTION_MESSAGE_CHARS = 120;
@@ -119,8 +119,8 @@ function serviceExceptionMessage(body: string): string {
   return detail.slice(0, EXCEPTION_MESSAGE_CHARS) || "excepción del servicio sin detalle";
 }
 
-async function getCollection(url: string, etiqueta: string): Promise<{ features: WfsFeature[] }> {
-  const response = await fetch(url, { next: { revalidate: REVALIDATE_SECONDS }, signal: AbortSignal.timeout(INA_TIMEOUT_MS) });
+async function getCollection(url: string, etiqueta: string, timeoutMs = INA_TIMEOUT_MS): Promise<{ features: WfsFeature[] }> {
+  const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
   if (!response.ok) {
     throw new Error(`El servicio del INA respondió ${response.status} al pedir ${etiqueta}`);
   }
@@ -139,6 +139,7 @@ export async function fetchRiver(historyDays: number = HISTORY_DAYS): Promise<Ri
         viewParams: `timeStart:${isoDay(-historyDays)};timeEnd:${isoDay(1)};`,
       }),
       `la estación ${INA_STATION}`,
+      historyDays > HISTORY_DAYS ? 90_000 : INA_TIMEOUT_MS,
     ),
     getCollection(wfsUrl({ propertyName: NETWORK_FIELDS, maxFeatures: String(MAX_FEATURES) }), "la red completa"),
   ]);
@@ -148,6 +149,7 @@ export async function fetchRiver(historyDays: number = HISTORY_DAYS): Promise<Ri
   if (!estacion) {
     throw new Error(`El INA no devolvió la estación ${INA_STATION}`);
   }
+  requireRecent(estacion.fecha, 48 * 3_600_000, "Estación Rosario del INA");
 
   const red = redCompleta.features.map(toStation).filter((station): station is RiverStation => station !== null);
 

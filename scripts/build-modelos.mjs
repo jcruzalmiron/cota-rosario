@@ -16,7 +16,7 @@ const CANDIDATE_FEATURE_SETS = [["total"], ["max2h"], ["max2h", "total"]];
 const ALL_FEATURES = ["max2h", "total"];
 
 async function fetchArchive(params) {
-  const query = new URLSearchParams({ latitude: String(ROSARIO.lat), longitude: String(ROSARIO.lon), timezone: TIMEZONE, ...params });
+  const query = new URLSearchParams({ latitude: String(ROSARIO.lat), longitude: String(ROSARIO.lon), timezone: TIMEZONE, ...params, models: "era5" });
   const response = await fetch(`${ARCHIVE_API}?${query}`);
   if (!response.ok) {
     throw new Error(`Open-Meteo archive devolvió ${response.status}`);
@@ -30,6 +30,7 @@ function lastDayOfMonth(mes) {
 }
 
 function monthlyFeatures(hourly) {
+  if (!Array.isArray(hourly?.time) || hourly.time.length === 0 || hourly.time.length !== hourly.precipitation?.length || hourly.precipitation.some((mm) => typeof mm !== "number" || !Number.isFinite(mm) || mm < 0)) throw new Error("El archivo horario tiene valores faltantes o inválidos; no se ajusta el modelo con ceros.");
   const byMonth = new Map();
   hourly.time.forEach((hora, index) => {
     const mes = hora.slice(0, 7);

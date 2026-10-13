@@ -7,7 +7,7 @@ import { MapLegend, type LegendOverlay } from "@/components/MapLegend";
 import { ReportPanel } from "@/components/reports/ReportPanel";
 import { useReports } from "@/components/reports/useReports";
 import { useSimulation } from "@/components/SimulationContext";
-import { RISK_FILL } from "@/components/status";
+import { RISK_FILL, riskColor } from "@/components/status";
 import {
   categoriaDesdeGris,
   featureAt,
@@ -20,7 +20,7 @@ import {
   type TerrainMeta,
 } from "@/lib/lookup";
 import { loadPixels, rasterOffset } from "@/lib/rasters";
-import { RISK_LABEL, type RiskLevel } from "@/lib/risk";
+import { RISK_LABEL, riskLabel, type RiskLevel } from "@/lib/risk";
 
 const CENTER: [number, number] = [-32.955, -60.66];
 const ZOOM = 12;
@@ -52,7 +52,7 @@ type Areas = FeatureCollection<Polygon | MultiPolygon, Record<string, string>>;
 type ZoneFeature = Feature<Polygon, { zona: string; sector: string }>;
 
 interface FloodMapProps {
-  zonas: { zona: string; nivel: RiskLevel }[];
+  zonas: { zona: string; nivel: RiskLevel | null }[];
   buscador?: boolean;
   reportes?: boolean;
   reportar?: boolean;
@@ -97,7 +97,7 @@ export function FloodMap({ zonas, buscador = false, reportes = false, reportar =
   const [barrios, setBarrios] = useState<Areas | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mostrarTerreno, setMostrarTerreno] = useState(false);
-  const [mostrarClima, setMostrarClima] = useState(true);
+  const [mostrarClima, setMostrarClima] = useState(false);
   const [consulta, setConsulta] = useState("");
   const [buscando, setBuscando] = useState(false);
   const [hallazgo, setHallazgo] = useState<Hallazgo | null>(null);
@@ -106,7 +106,7 @@ export function FloodMap({ zonas, buscador = false, reportes = false, reportar =
 
   const zonasEfectivas = escenario?.zonas ?? zonas;
   const nivelDeZona = useCallback(
-    (zona: string): RiskLevel => zonasEfectivas.find((entry) => entry.zona === zona.trim())?.nivel ?? "normal",
+    (zona: string): RiskLevel | null => zonasEfectivas.find((entry) => entry.zona === zona.trim())?.nivel ?? null,
     [zonasEfectivas],
   );
   const nivelRef = useRef(nivelDeZona);
@@ -116,10 +116,11 @@ export function FloodMap({ zonas, buscador = false, reportes = false, reportar =
 
   const estiloDeZona = useCallback(
     (feature: ZoneFeature | undefined) => {
-      const fill = RISK_FILL[nivelRef.current(feature?.properties?.zona ?? "")];
-      return { color: fill, weight: 1, fillColor: fill, fillOpacity: escenario ? ZONE_FILL_OPACITY_SIMULATED : ZONE_FILL_OPACITY };
+      const level = nivelDeZona(feature?.properties?.zona ?? "");
+      const fill = riskColor(level);
+      return { color: fill, weight: 1, fillColor: fill, fillOpacity: escenario ? ZONE_FILL_OPACITY_SIMULATED : ZONE_FILL_OPACITY, dashArray: level === null ? "4 4" : undefined };
     },
-    [escenario],
+    [escenario, nivelDeZona],
   );
 
   useEffect(() => {
@@ -162,7 +163,7 @@ export function FloodMap({ zonas, buscador = false, reportes = false, reportar =
         style: (feature) => estiloDeZona(feature as ZoneFeature | undefined),
         onEachFeature: (feature, layer) => {
           const properties = (feature as ZoneFeature).properties;
-          layer.bindPopup(() => `Zona ${properties?.zona ?? "?"} · sector ${properties?.sector || "—"}<br/>${RISK_LABEL[nivelRef.current(properties?.zona ?? "")]}`);
+          layer.bindPopup(() => `Zona ${properties?.zona ?? "?"} · sector ${properties?.sector || "—"}<br/>${riskLabel(nivelRef.current(properties?.zona ?? ""))}`);
         },
       }).addTo(map);
       setMapReady(true);
@@ -291,7 +292,7 @@ export function FloodMap({ zonas, buscador = false, reportes = false, reportar =
           radius: 7,
           color: "#ececee",
           weight: 2,
-          fillColor: RISK_FILL[zona ? nivelDeZona(zona) : "normal"],
+          fillColor: riskColor(zona ? nivelDeZona(zona) : null),
           fillOpacity: 1,
         }).addTo(map);
         map.setView([lat, lon], FOUND_ZOOM);

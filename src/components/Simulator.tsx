@@ -15,6 +15,7 @@ interface SimulatorProps {
   alerta: number;
   evacuacion: number;
   picoActualMm: number;
+  lluviaDisponible?: boolean;
 }
 
 function Estado({ nivel, grande = false }: { nivel: RiskLevel; grande?: boolean }) {
@@ -26,7 +27,7 @@ function Estado({ nivel, grande = false }: { nivel: RiskLevel; grande?: boolean 
   );
 }
 
-function SimulatorPanel({ metrosActuales, alerta, evacuacion, picoActualMm }: SimulatorProps) {
+function SimulatorPanel({ metrosActuales, alerta, evacuacion, picoActualMm, lluviaDisponible = true }: SimulatorProps) {
   const { setEscenario, reset } = useSimulation();
   const [metros, setMetros] = useState(metrosActuales);
   const [lluvia, setLluvia] = useState(picoActualMm);
@@ -46,7 +47,7 @@ function SimulatorPanel({ metrosActuales, alerta, evacuacion, picoActualMm }: Si
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Estado nivel={resultado.nivel} grande />
-        {modificado ? <span className="text-xs text-atencion">escenario simulado · el mapa lo refleja</span> : <span className="meta">valores reales de ahora</span>}
+        {modificado ? <span className="text-xs text-atencion">escenario simulado · el mapa lo refleja</span> : <span className="meta">valores iniciales de la consulta</span>}
         <button
           type="button"
           onClick={reset}
@@ -57,6 +58,7 @@ function SimulatorPanel({ metrosActuales, alerta, evacuacion, picoActualMm }: Si
         </button>
       </div>
 
+      {!lluviaDisponible ? <p className="text-xs text-atencion">La lluvia no está disponible: el control parte de 0 mm como supuesto de demo.</p> : null}
       <div className="grid gap-5 sm:grid-cols-2">
         <label htmlFor="sim-rio" className="flex flex-col gap-2">
           <span className="flex items-baseline justify-between">

@@ -8,7 +8,7 @@
     "https://datosabiertos.rosario.gob.ar/sites/default/files/uploaded_resources/Intervenciones%20Defensa%20Civil%20-%20A%C3%B1o%202024.csv"
   ],
   "lluvia": {
-    "fuente": "Open-Meteo archivo histórico (ERA5)",
+    "fuente": "Open-Meteo archivo histórico (modelo no fijado en el snapshot original)",
     "endpoint": "https://archive-api.open-meteo.com/v1/archive",
     "punto": {
       "lat": -32.9468,

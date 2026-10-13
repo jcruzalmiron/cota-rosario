@@ -62,7 +62,7 @@ export function ForecastMap({ distritos, ventanaDias, esquina }: ForecastMapProp
         style: (feature) => {
           const nombre = (feature as Feature<Polygon, { distrito: string }>).properties.distrito;
           const esperados = porDistrito.get(nombre)?.esperados ?? 0;
-          return { color: FILL_COLOR, weight: 1, fillColor: FILL_COLOR, fillOpacity: MIN_FILL_OPACITY + (MAX_FILL_OPACITY - MIN_FILL_OPACITY) * (esperados / maximo) };
+          return { color: porDistrito.has(nombre) ? FILL_COLOR : "#98a2b3", weight: 1, dashArray: porDistrito.has(nombre) ? undefined : "4 4", fillColor: FILL_COLOR, fillOpacity: porDistrito.has(nombre) ? MIN_FILL_OPACITY + (MAX_FILL_OPACITY - MIN_FILL_OPACITY) * (esperados / maximo) : 0 };
         },
         onEachFeature: (feature, layer) => {
           const nombre = (feature as Feature<Polygon, { distrito: string }>).properties.distrito;
@@ -74,8 +74,8 @@ export function ForecastMap({ distritos, ventanaDias, esquina }: ForecastMapProp
           }).addTo(map);
           layer.bindTooltip(
             entry
-              ? `${titulo(nombre)} · ${entry.esperados.toFixed(1)} anegamientos esperados en ${ventanaDias} días · ${Math.round(entry.probabilidadAlMenosUno * 100)} % de al menos uno`
-              : titulo(nombre),
+              ? `${titulo(nombre)} · ${entry.esperados.toFixed(1)} casos ilustrativos en ${ventanaDias} días · reparto histórico sin validación local`
+              : `${titulo(nombre)} · escenario no disponible`,
             { sticky: true },
           );
         },
@@ -97,9 +97,9 @@ export function ForecastMap({ distritos, ventanaDias, esquina }: ForecastMapProp
         <div className="pointer-events-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-md border border-rule bg-panel/95 px-3 py-2 backdrop-blur">
           <span className="flex items-center gap-1.5 text-[11px] text-ink-soft">
             <span className="size-2.5 rounded-sm" style={{ background: FILL_COLOR }} aria-hidden="true" />
-            Anegamientos esperados en {ventanaDias} días, por distrito
+            {distritos.length ? `Reparto ilustrativo a ${ventanaDias} días por distrito` : "Escenario no disponible · sin relleno"}
           </span>
-          <span className="meta">modelo</span>
+          <span className="meta">demo · reparto sin calibrar</span>
         </div>
       </div>
       {error ? <p className="absolute left-4 top-4 z-[500] rounded-md border border-rule bg-panel px-3 py-2 text-xs text-alerta">{error}</p> : null}

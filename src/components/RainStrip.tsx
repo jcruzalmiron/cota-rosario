@@ -39,8 +39,8 @@ export function RainStrip({ lluvia }: RainStripProps) {
             <div
               key={hora.hora}
               className={`flex-1 rounded-t-sm ${vacia ? "bg-rule" : "bg-water-deep"}`}
-              style={{ height: `${altura}%`, opacity: vacia ? 0.55 : Math.max(0.5, hora.probabilidad / 100) }}
-              title={`${hora.hora.slice(5, 16).replace("T", " ")} · ${hora.milimetros.toFixed(1)} mm · ${hora.probabilidad}%`}
+              style={{ height: `${altura}%`, opacity: vacia ? 0.55 : hora.probabilidad === null ? 0.7 : Math.max(0.5, hora.probabilidad / 100) }}
+              title={`${hora.hora.slice(5, 16).replace("T", " ")} · ${hora.milimetros.toFixed(1)} mm · ${hora.probabilidad === null ? "probabilidad no disponible" : `${hora.probabilidad}%`}`}
             />
           );
         })}
@@ -58,8 +58,7 @@ export function RainStrip({ lluvia }: RainStripProps) {
       </div>
 
       <p className="text-xs leading-relaxed text-ink-soft">
-        La barra marca milímetros por hora; la opacidad, la probabilidad. Lo que anega el macrocentro no es el total del día sino la
-        concentración: el modelo mira la ventana de dos horas más cargada de las próximas 48.
+        La barra marca milímetros por hora y su opacidad representa la probabilidad cuando está disponible. La demo compara el pico de dos horas de las próximas 48 con umbrales orientativos; no representa el drenaje de cada cuadra.
       </p>
     </div>
   );

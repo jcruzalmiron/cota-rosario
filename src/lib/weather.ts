@@ -1,5 +1,7 @@
 import { fetchWithRetry } from "@/lib/rain";
 import { ROSARIO } from "@/lib/sources";
+import { sourceTime } from "@/lib/time";
+import { probability, requireRecent } from "@/lib/dataChecks";
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const TIMEZONE = "America/Argentina/Buenos_Aires";
@@ -14,7 +16,7 @@ export interface WeatherNow {
   presion: number;
   viento: number;
   lluviaAhora: number;
-  probabilidadLluvia: number;
+  probabilidadLluvia: number | null;
   ventanaHoras: number;
   codigo: number;
   descripcion: string;
@@ -24,6 +26,7 @@ export interface WeatherNow {
 }
 
 interface CurrentResponse {
+  utc_offset_seconds: number;
   current: {
     time: string;
     temperature_2m: number;
@@ -61,14 +64,19 @@ export async function fetchWeather(): Promise<WeatherNow> {
     longitude: String(ROSARIO.lon),
     current: "temperature_2m,apparent_temperature,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation,weather_code",
     hourly: "precipitation_probability",
-    forecast_days: "1",
+    forecast_days: "2",
     timezone: TIMEZONE,
   });
   const response = await fetchWithRetry(`${FORECAST_URL}?${params}`, "Open-Meteo");
   const data = (await response.json()) as CurrentResponse;
-  const ahora = new Date(data.current.time).getTime();
+  const medidoEn = sourceTime(data.current.time, data.utc_offset_seconds);
+  requireRecent(medidoEn, 2 * 3_600_000, "Clima de Open-Meteo");
+  const ahora = Date.parse(medidoEn);
+  for (const value of [data.current.temperature_2m, data.current.apparent_temperature, data.current.relative_humidity_2m, data.current.surface_pressure, data.current.wind_speed_10m, data.current.weather_code, data.current.precipitation]) {
+    if (typeof value !== "number" || !Number.isFinite(value)) throw new Error("El clima actual tiene datos faltantes.");
+  }
   const proximas = data.hourly.time
-    .map((hora, index) => ({ t: new Date(hora).getTime(), p: data.hourly.precipitation_probability[index] ?? 0 }))
+    .map((hora, index) => ({ t: Date.parse(sourceTime(hora, data.utc_offset_seconds)), p: probability(data.hourly.precipitation_probability[index]) }))
     .filter((entry) => entry.t >= ahora - 3_600_000)
     .slice(0, PROBABILITY_HOURS);
   const { descripcion, icono } = describe(data.current.weather_code);
@@ -79,12 +87,12 @@ export async function fetchWeather(): Promise<WeatherNow> {
     presion: Math.round(data.current.surface_pressure),
     viento: Math.round(data.current.wind_speed_10m),
     lluviaAhora: data.current.precipitation,
-    probabilidadLluvia: Math.max(0, ...proximas.map((entry) => entry.p)),
+    probabilidadLluvia: proximas.length === PROBABILITY_HOURS && proximas.every((entry) => entry.p !== null) ? Math.max(...proximas.map((entry) => entry.p!)) : null,
     ventanaHoras: PROBABILITY_HOURS,
     codigo: data.current.weather_code,
     descripcion,
     icono,
-    medidoEn: data.current.time,
+    medidoEn,
     consultadoEn: new Date().toISOString(),
   };
 }

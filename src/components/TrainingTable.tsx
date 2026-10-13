@@ -19,9 +19,8 @@ export function TrainingTable({ entrenamiento }: TrainingTableProps) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-xs leading-relaxed text-ink-soft">
-        Cómo le fue al modelo mes por mes en el pasado: cuántos anegamientos atendió Defensa Civil de verdad y cuántos habría dicho el modelo con la
-        lluvia de ese mes. Acertó dentro del margen en {aciertos} de {entrenamiento.length} meses; cuando falla, suele ser porque una tormenta corta cargó
-        el mes o porque llovió mucho pero repartido.
+        Ajuste sobre los {entrenamiento.length} meses usados para entrenar: intervenciones registradas y resultado del modelo con la lluvia de ese mes.
+        En {aciertos} meses la diferencia queda dentro de un margen gráfico ilustrativo de 15 casos o 35 %. Esta comparación dentro de la muestra no mide precisión futura.
       </p>
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-ink-soft">
         <span className="flex items-center gap-2">

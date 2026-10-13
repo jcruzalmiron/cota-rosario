@@ -8,15 +8,16 @@ import { RainStrip } from "@/components/RainStrip";
 import { RiverGauge } from "@/components/RiverGauge";
 import { SourceDown } from "@/components/SourceDown";
 import { WeatherBadge } from "@/components/WeatherBadge";
-import { RISK_FILL } from "@/components/status";
+import { riskColor } from "@/components/status";
+import { DataStatus } from "@/components/DataStatus";
 import { loadEstado } from "@/lib/estado";
-import { RISK_LABEL } from "@/lib/risk";
+import { riskLabel } from "@/lib/risk";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const CONSEJOS: Record<string, string[]> = {
   normal: [
-    "Nada que hacer hoy. Lo que anega no es el total de lluvia del día sino cuánta cae junta.",
+    "Los datos consultados no superan los umbrales orientativos. Revisá las condiciones de tu cuadra y las comunicaciones oficiales.",
     "Si vivís sobre zona marcada, revisá que la rejilla de tu frente no esté tapada.",
   ],
   atencion: [
@@ -37,20 +38,21 @@ const CONSEJOS: Record<string, string[]> = {
 };
 
 export default async function VecinosPage() {
-  const { riesgo, rio, lluvia, clima, fallas } = await loadEstado();
-  const consejos = CONSEJOS[riesgo.nivel] ?? CONSEJOS.normal;
+  const estado = await loadEstado();
+  const { riesgo, rio, lluvia, clima, fallas } = estado;
+  const consejos = riesgo.incompleto ? ["La evaluación está incompleta: consultá las fuentes disponibles y las comunicaciones oficiales.", "Los aportes de vecinos son señales para verificar; su ausencia no descarta agua en la zona."] : CONSEJOS[riesgo.nivel ?? "normal"];
   const fallaDe = (fuente: string) => fallas.find((falla) => falla.fuente === fuente);
-  const titulo = riesgo.sinDatos
-    ? "Sin datos para evaluar ahora"
+  const titulo = riesgo.nivel === null
+    ? "Faltan datos para una evaluación completa"
     : riesgo.nivel === "normal"
-      ? "Hoy no hay riesgo de anegamiento"
-      : `Riesgo ${RISK_LABEL[riesgo.nivel].toLowerCase()}`;
+      ? "Sin señales elevadas en los datos consultados"
+      : `Señal ${riskLabel(riesgo.nivel).toLowerCase()} en esta demo`;
 
   return (
     <AppShell
       activo="/"
       nivel={riesgo.nivel}
-      actualizadoEn={new Date().toISOString()}
+      actualizadoEn={riesgo.evaluadoEn}
       lienzo={<FloodMap zonas={riesgo.zonas} buscador reportes reportar esquina={<WeatherBadge clima={clima} />} />}
       rail={
         <div className="flex flex-col">
@@ -59,13 +61,15 @@ export default async function VecinosPage() {
             <h1 className="mt-2 flex items-start gap-3 text-2xl font-semibold leading-tight tracking-tight text-ink">
               <span
                 className="mt-2.5 size-2.5 shrink-0 rounded-full"
-                style={{ background: riesgo.sinDatos ? "var(--ink-faint)" : RISK_FILL[riesgo.nivel] }}
+                style={{ background: riskColor(riesgo.nivel) }}
                 aria-hidden="true"
               />
               <span>{titulo}</span>
             </h1>
             <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">{riesgo.motivo}</p>
           </section>
+
+          <DataStatus estado={estado} />
 
           <section className="hairline flex flex-col">
             {riesgo.factores.map((factor) => (
@@ -75,10 +79,10 @@ export default async function VecinosPage() {
                   <span className="flex items-center gap-1.5 text-xs">
                     <span
                       className="size-1.5 rounded-full"
-                      style={{ background: factor.disponible ? RISK_FILL[factor.nivel] : "var(--ink-faint)" }}
+                      style={{ background: riskColor(factor.nivel) }}
                       aria-hidden="true"
                     />
-                    <span className="text-ink-soft">{factor.disponible ? RISK_LABEL[factor.nivel] : "sin dato"}</span>
+                    <span className="text-ink-soft">{factor.disponible ? riskLabel(factor.nivel) : "sin evaluación"}</span>
                   </span>
                 </div>
                 <p className="readout text-sm text-ink">{factor.medida}</p>
@@ -124,7 +128,7 @@ export default async function VecinosPage() {
               </p>
             </DocsSection>
             <DocsSection titulo="De dónde sale cada número">
-              <p className="text-xs leading-relaxed text-ink-soft">Ningún dato de este panel es propio. Todos se consultan en vivo y se pueden verificar.</p>
+              <p className="text-xs leading-relaxed text-ink-soft">Esta demo combina lecturas publicadas, pronósticos modelados, capas fijas y cálculos propios. Consultá la fecha y el método de cada fuente; su calidad no está garantizada por el panel.</p>
               <Provenance
                 sellos={[
                   { id: "ina", consultadoEn: rio?.consultadoEn, falla: fallaDe("ina") },

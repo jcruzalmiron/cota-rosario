@@ -4,11 +4,32 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
   deploy:
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - name: Trigger EasyPanel deploy
-        run: curl --fail --silent --show-error -X POST "$EASYPANEL_DEPLOY_HOOK"
+        run: curl --fail --silent --show-error --output /dev/null -X POST "$EASYPANEL_DEPLOY_HOOK"
         env:
           EASYPANEL_DEPLOY_HOOK: ${{ secrets.EASYPANEL_DEPLOY_HOOK }}

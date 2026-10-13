@@ -15,14 +15,14 @@ function etiquetaDia(fecha: string): string {
 
 export function DailyOutlook({ dias, alerta }: DailyOutlookProps) {
   const maxLluvia = Math.max(...dias.map((dia) => dia.lluviaMm), 1);
-  const maxCasos = Math.max(...dias.map((dia) => dia.anegamientosEsperados), 0.1);
+  const maxCasos = Math.max(...dias.map((dia) => dia.anegamientosEsperados ?? 0), 0.1);
   return (
-    <table className="w-full text-xs">
+    <div className="overflow-x-auto"><table className="w-full text-xs">
       <thead>
         <tr className="meta text-left">
           <th className="pb-2 font-normal">Día</th>
           <th className="pb-2 font-normal">Lluvia</th>
-          <th className="pb-2 font-normal">Anegamientos esperados</th>
+          <th className="pb-2 font-normal">Reparto ilustrativo</th>
           <th className="pb-2 font-normal">Río estimado</th>
         </tr>
       </thead>
@@ -36,16 +36,15 @@ export function DailyOutlook({ dias, alerta }: DailyOutlookProps) {
                   <span className="block h-full rounded-full bg-water/70" style={{ width: `${(dia.lluviaMm / maxLluvia) * PERCENT}%` }} />
                 </span>
                 <span className="readout text-ink">{dia.lluviaMm.toFixed(0)} mm</span>
-                <span className="readout text-ink-faint">{dia.probabilidad} %</span>
+                <span className="readout text-ink-faint">{dia.probabilidad === null ? "sin probabilidad" : `${dia.probabilidad} %`}</span>
               </div>
             </td>
             <td className="py-2 pr-3">
               <div className="flex items-center gap-2">
                 <span className="h-1 w-24 overflow-hidden rounded-full bg-rule-soft">
-                  <span className="block h-full rounded-full bg-alerta/80" style={{ width: `${(dia.anegamientosEsperados / maxCasos) * PERCENT}%` }} />
+                  <span className="block h-full rounded-full bg-alerta/80" style={{ width: `${((dia.anegamientosEsperados ?? 0) / maxCasos) * PERCENT}%` }} />
                 </span>
-                <span className="readout text-ink">{dia.anegamientosEsperados.toFixed(1)}</span>
-                <span className="readout text-ink-faint">{Math.round(dia.probabilidadAlMenosUno * PERCENT)} %</span>
+                <span className="readout text-ink">{dia.anegamientosEsperados === null ? "—" : dia.anegamientosEsperados.toFixed(1)}</span>
               </div>
             </td>
             <td className="py-2">
@@ -61,6 +60,6 @@ export function DailyOutlook({ dias, alerta }: DailyOutlookProps) {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }

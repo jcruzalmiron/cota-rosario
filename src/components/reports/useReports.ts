@@ -20,6 +20,10 @@ export interface ReportsState {
   borrador: ReportDraft | null;
   enviando: boolean;
   error: string | null;
+  disponible: boolean | null;
+  confirmados: string[];
+  confirmando: string | null;
+  colocarCentro: () => void;
   empezarColocacion: () => void;
   cancelar: () => void;
   actualizarBorrador: (cambios: Partial<ReportDraft>) => void;
@@ -43,10 +47,11 @@ export function haceCuanto(iso: string): string {
   return `hace ${horas} h`;
 }
 
-async function fetchReports(): Promise<Report[] | null> {
+async function fetchReports(): Promise<Report[]> {
   const response = await fetch(API, { cache: "no-store" });
   const data = (await response.json()) as { ok: boolean; reportes?: Report[] };
-  return data.ok && data.reportes ? data.reportes : null;
+  if (!response.ok || !data.ok || !Array.isArray(data.reportes)) throw new Error("Reportes no disponibles");
+  return data.reportes;
 }
 
 function markerHtml(tipo: ReportType): string {
@@ -62,19 +67,27 @@ export function useReports(mapRef: RefObject<import("leaflet").Map | null>, mapR
   const [borrador, setBorrador] = useState<ReportDraft | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [disponible, setDisponible] = useState<boolean | null>(null);
+  const [confirmados, setConfirmados] = useState<string[]>([]);
+  const [confirmando, setConfirmando] = useState<string | null>(null);
+  const confirmationPending = useRef(false);
 
   useEffect(() => {
     let activo = true;
     const cargar = () =>
       fetchReports()
         .then((lista) => {
-          if (activo && lista) {
+          if (activo) {
             setReportes(lista);
+            setDisponible(true);
+            setError((current) => current === "No se pudieron cargar los reportes de vecinos." ? null : current);
           }
         })
         .catch(() => {
           if (activo) {
             setError("No se pudieron cargar los reportes de vecinos.");
+            setDisponible(false);
+            setReportes([]);
           }
         });
     cargar();
@@ -144,6 +157,11 @@ export function useReports(mapRef: RefObject<import("leaflet").Map | null>, mapR
     limpiarBorrador();
   }, [limpiarBorrador]);
 
+  const colocarCentro = useCallback(() => {
+    const map = mapRef.current;
+    if (map) map.fire("click", { latlng: map.getCenter() });
+  }, [mapRef]);
+
   const actualizarBorrador = useCallback((cambios: Partial<ReportDraft>) => {
     setBorrador((current) => (current ? { ...current, ...cambios } : current));
   }, []);
@@ -172,6 +190,9 @@ export function useReports(mapRef: RefObject<import("leaflet").Map | null>, mapR
   }, [borrador, limpiarBorrador]);
 
   const confirmar = useCallback(async (id: string) => {
+    if (confirmationPending.current || confirmados.includes(id)) return;
+    confirmationPending.current = true;
+    setConfirmando(id);
     try {
       const response = await fetch(`${API}/${id}/confirmar`, { method: "POST" });
       const data = (await response.json()) as { ok: boolean; error?: string; reporte?: Report };
@@ -180,10 +201,14 @@ export function useReports(mapRef: RefObject<import("leaflet").Map | null>, mapR
         return;
       }
       setReportes((current) => current.map((reporte) => (reporte.id === id ? (data.reporte as Report) : reporte)));
+      setConfirmados((current) => [...current, id]);
     } catch {
       setError("No se pudo confirmar. Probá de nuevo.");
+    } finally {
+      confirmationPending.current = false;
+      setConfirmando(null);
     }
-  }, []);
+  }, [confirmados]);
 
-  return { reportes, colocando, borrador, enviando, error, empezarColocacion, cancelar, actualizarBorrador, enviar, confirmar };
+  return { reportes, colocando, borrador, enviando, error, disponible, confirmados, confirmando, colocarCentro, empezarColocacion, cancelar, actualizarBorrador, enviar, confirmar };
 }

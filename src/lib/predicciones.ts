@@ -1,10 +1,10 @@
 import modelos from "../../public/data/modelos.json";
-import type { SourceFailure, SourceId } from "@/lib/estado";
+import { loadEstado, type Estado, type SourceFailure, type SourceId } from "@/lib/estado";
 import { empiricalRank, exceedanceProbability, returnPeriodYears, type ExtremeRainModel } from "@/lib/forecast/gumbel";
 import { districtExpectations, expectedCases, splitByDay, type DistrictExpectation, type PoissonModel } from "@/lib/forecast/poisson";
 import { ratingCurve, trendProjection, type RatingCurve, type TrendProjection } from "@/lib/forecast/river";
 import { fetchDischarge, fetchRainOutlook, type DischargeDay, type RainOutlook } from "@/lib/rain";
-import { fetchRiver, type RiverReading } from "@/lib/river";
+import { type RiverReading } from "@/lib/river";
 import { mergeRiverHistory } from "@/lib/riverHistory";
 
 const DISCHARGE_HISTORY_DAYS = 210;
@@ -19,6 +19,8 @@ const poissonModel = modelos.anegamientos as PoissonModel;
 const extremeModel = modelos.lluviaExtrema as ExtremeRainModel;
 
 export interface FloodingForecast {
+  modo: "exploratorio";
+  validacionTemporal: "mensual";
   ventanaDias: number;
   lluvia: { total: number; max2h: number };
   esperadosCiudad: number;
@@ -53,9 +55,9 @@ export interface RiverForecast {
 export interface DailyForecast {
   fecha: string;
   lluviaMm: number;
-  probabilidad: number;
-  anegamientosEsperados: number;
-  probabilidadAlMenosUno: number;
+  probabilidad: number | null;
+  anegamientosEsperados: number | null;
+  probabilidadAlMenosUno: number | null;
   rioMetros: number | null;
 }
 
@@ -104,6 +106,8 @@ function buildFlooding(outlook: RainOutlook): FloodingForecast {
   const esperadosCiudad = expectedCases(poissonModel, lluvia, outlook.ventanaDias);
   const { formula, pseudoR2, n, validacionCruzada, coeficientes, variablesUsadas, candidatos } = poissonModel;
   return {
+    modo: "exploratorio",
+    validacionTemporal: "mensual",
     ventanaDias: outlook.ventanaDias,
     lluvia,
     esperadosCiudad,
@@ -112,12 +116,10 @@ function buildFlooding(outlook: RainOutlook): FloodingForecast {
   };
 }
 
-export async function loadPredicciones(): Promise<Predicciones> {
-  const [rioResult, lluviaResult, caudalResult] = await Promise.allSettled([fetchRiver(), fetchRainOutlook(), fetchDischarge(DISCHARGE_HISTORY_DAYS)]);
-  const fallas: SourceFailure[] = [];
-  if (rioResult.status === "rejected") {
-    fallas.push(failure("ina", rioResult.reason));
-  }
+export async function loadPredicciones(input?: Estado): Promise<Predicciones> {
+  const estado = input ?? await loadEstado();
+  const [lluviaResult, caudalResult] = await Promise.allSettled([fetchRainOutlook(), fetchDischarge(DISCHARGE_HISTORY_DAYS)]);
+  const fallas: SourceFailure[] = estado.fallas.filter((falla) => falla.fuente === "ina");
   if (lluviaResult.status === "rejected") {
     fallas.push(failure("openMeteo", lluviaResult.reason));
   }
@@ -126,7 +128,7 @@ export async function loadPredicciones(): Promise<Predicciones> {
   }
 
   const outlook = lluviaResult.status === "fulfilled" ? lluviaResult.value : null;
-  const rio = rioResult.status === "fulfilled" ? rioResult.value : null;
+  const rio = estado.rio;
   const caudal = caudalResult.status === "fulfilled" ? caudalResult.value : null;
 
   const historia = rio ? mergeRiverHistory(rio.serie) : null;
@@ -145,7 +147,11 @@ export async function loadPredicciones(): Promise<Predicciones> {
         }
       : null;
 
-  const anegamientos = outlook ? buildFlooding(outlook) : null;
+  let anegamientos: FloodingForecast | null = null;
+  if (outlook) {
+    try { anegamientos = buildFlooding(outlook); }
+    catch (error) { fallas.push(failure("modelos", error)); }
+  }
   const porDiaCasos = outlook && anegamientos ? splitByDay(poissonModel, anegamientos.esperadosCiudad, outlook.dias.map((dia) => ({ total: dia.milimetros, max2h: dia.max2h }))) : [];
   const nivelPorDia = new Map([
     ...(riverForecast?.historia.map((lectura) => [lectura.fecha.slice(0, 10), lectura.metros] as const) ?? []),
@@ -155,8 +161,8 @@ export async function loadPredicciones(): Promise<Predicciones> {
     fecha: dia.fecha,
     lluviaMm: dia.milimetros,
     probabilidad: dia.probabilidad,
-    anegamientosEsperados: porDiaCasos[index] ?? 0,
-    probabilidadAlMenosUno: Number((1 - Math.exp(-(porDiaCasos[index] ?? 0))).toFixed(2)),
+    anegamientosEsperados: porDiaCasos[index] ?? null,
+    probabilidadAlMenosUno: null,
     rioMetros: nivelPorDia.get(dia.fecha) ?? null,
   }));
 

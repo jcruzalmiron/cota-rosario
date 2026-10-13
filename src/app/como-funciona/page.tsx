@@ -3,20 +3,20 @@ import Link from "next/link";
 import { Deck, type DeckSlide } from "@/components/deck/Deck";
 import { RISK_FILL } from "@/components/status";
 import { HELP_HREF, TopBar } from "@/components/TopBar";
-import { conceptos, HERRAMIENTAS, PREGUNTAS, QUE_ES, SEMAFORO, type Concepto } from "@/content/comoFunciona";
-import { loadEstado } from "@/lib/estado";
+import { conceptos, HERRAMIENTAS, PREGUNTAS, PROCESO, QUE_ES, SEMAFORO, type Concepto } from "@/content/comoFunciona";
+import { DemoNotice } from "@/components/DemoNotice";
 import { RISK_ORDER } from "@/lib/risk";
 import { SOURCES } from "@/lib/sources";
 
-export const revalidate = 300;
+// La guía es estática y funciona aunque las fuentes externas no respondan.
 
 const CONCEPTS_PER_SLIDE = 4;
 const QUESTIONS_PER_SLIDE = 4;
 const CIFRAS = [
   { valor: "87", etiqueta: "zonas oficiales de inundación" },
-  { valor: "357", etiqueta: "estaciones del INA en la red" },
+  { valor: "7", etiqueta: "pasos de construcción con IA" },
   { valor: "86", etiqueta: "años de lluvia para medir rarezas" },
-  { valor: "5 min", etiqueta: "entre una actualización y la siguiente" },
+  { valor: "Demo", etiqueta: "calidad sin garantía operativa" },
 ];
 const INSTITUCIONES = [
   { nombre: "Tecnoteca", archivo: "/logos/tecnoteca.png", ancho: 1200, alto: 597 },
@@ -24,9 +24,10 @@ const INSTITUCIONES = [
   { nombre: "Gobierno de Santa Fe", archivo: "/logos/gobierno-santa-fe.png", ancho: 757, alto: 164 },
 ];
 const CADENCIA: Record<string, string> = {
-  ina: "una lectura diaria · en vivo",
-  openMeteo: "cada hora · en vivo",
-  glofas: "diario · en vivo",
+  ina: "lecturas con fecha",
+  openMeteo: "pronóstico modelado",
+  glofas: "caudal modelado",
+  clima: "condiciones modeladas",
   areas: "capa fija municipal",
   riesgoClima: "capa fija municipal",
   defensaCivil: "registro mensual municipal",
@@ -62,9 +63,7 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 export default async function ComoFuncionaPage() {
-  const estado = await loadEstado();
-  const estacion = estado.rio?.estacion;
-  const listaConceptos = conceptos({ alerta: estacion?.alerta ?? null, evacuacion: estacion?.evacuacion ?? null, aguasBajas: estacion?.aguasBajas ?? null });
+  const listaConceptos = conceptos({ alerta: null, evacuacion: null, aguasBajas: null });
   const gruposConceptos = chunk(listaConceptos, CONCEPTS_PER_SLIDE);
   const [queEs] = QUE_ES;
 
@@ -97,11 +96,11 @@ export default async function ComoFuncionaPage() {
       ),
     },
     {
-      id: "que-es",
+      id: "alcance",
       titulo: queEs.titulo,
       contenido: (
         <div className="flex flex-col gap-10">
-          <Capitulo numero="01" titulo="Una sola pregunta" />
+          <Capitulo numero="01" titulo="Una demo con límites explícitos" />
           <div className="grid gap-8 lg:grid-cols-3">
             {queEs.parrafos.map((parrafo, index) => (
               <p key={parrafo} className={`leading-relaxed ${index === 0 ? "text-xl text-ink lg:col-span-3 lg:text-2xl" : "border-t border-rule pt-5 text-sm text-ink-soft"}`}>
@@ -117,7 +116,7 @@ export default async function ComoFuncionaPage() {
       titulo: "El semáforo",
       contenido: (
         <div className="flex flex-col">
-          <Capitulo numero="02" titulo="Cuatro luces" bajada="El nivel general es el peor de los dos factores que mira Cota: el río y la lluvia concentrada." />
+          <Capitulo numero="02" titulo="Cuatro luces" bajada="El nivel combina río y lluvia. Si falta un factor, la evaluación es parcial; el gris indica evaluación incompleta." />
           <dl className="flex flex-col divide-y divide-rule">
             {SEMAFORO.map((luz, index) => (
               <div key={luz.termino} className="grid gap-2 py-5 sm:grid-cols-[14rem_1fr] sm:gap-8">
@@ -155,6 +154,7 @@ export default async function ComoFuncionaPage() {
         </div>
       ),
     },
+    ...chunk(PROCESO, 4).map((grupo, index) => ({ id: `construccion-${index}`, titulo: `Cómo la construimos ${index + 1}`, contenido: <div><Capitulo numero={`03.${index + 1}`} titulo="De la idea al producto" bajada="Proceso informado por el equipo para la capacitación. Las instrucciones originales a la IA no están conservadas en este repositorio." /><ConceptosSlide lista={grupo} /></div> })),
     ...HERRAMIENTAS.map((herramienta, index) => ({
       id: `herramienta-${index}`,
       titulo: herramienta.vista,
@@ -190,7 +190,7 @@ export default async function ComoFuncionaPage() {
       titulo: "Las fuentes",
       contenido: (
         <div className="flex flex-col">
-          <Capitulo numero="05" titulo="De dónde sale cada dato" bajada="Ningún número es propio. Lo que es modelo está marcado como modelo." />
+          <Capitulo numero="05" titulo="De dónde sale cada dato" bajada="Lecturas, modelos, transformaciones y registros tienen alcances diferentes." />
           <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
             {Object.values(SOURCES).map((fuente) => (
               <a
@@ -258,7 +258,7 @@ export default async function ComoFuncionaPage() {
           <h2 className="text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-6xl">
             Entender antes,
             <br />
-            avisar a tiempo.
+            aprender y contrastar.
           </h2>
           <p className="max-w-xl text-base leading-relaxed text-ink-soft">
             Cota no es un servicio oficial de alerta. Ante una emergencia, Defensa Civil <span className="readout text-ink">103</span>. Todo el detalle
@@ -283,7 +283,8 @@ export default async function ComoFuncionaPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <TopBar activo={HELP_HREF} nivel={estado.riesgo.sinDatos ? undefined : estado.riesgo.nivel} />
+      <TopBar activo={HELP_HREF} />
+      <DemoNotice />
       <div className="min-h-0 flex-1">
         <Deck slides={slides} />
       </div>

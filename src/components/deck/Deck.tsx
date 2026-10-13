@@ -55,6 +55,16 @@ export function Deck({ slides }: DeckProps) {
   }, [slides.length]);
 
   useEffect(() => {
+    const fromHash = () => {
+      const index = slides.findIndex((slide) => `#${slide.id}` === window.location.hash);
+      if (index >= 0) irA(index);
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
+  }, [slides, irA]);
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {

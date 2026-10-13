@@ -49,7 +49,7 @@ export type LecturaTerreno = { estado: "bajo" | "plano" | "edificado"; metros: n
 export interface Hallazgo {
   etiqueta: string;
   zona?: string;
-  nivel?: RiskLevel;
+  nivel?: RiskLevel | null;
   dentro: boolean;
   cercano: { zona: string; metros: number } | null;
   terreno: LecturaTerreno;
@@ -87,19 +87,23 @@ export function featureAt(collection: FeatureCollection<Polygon | MultiPolygon, 
   return collection.features.find((feature) => ringsOf(feature).some((rings) => pointInPolygon(lat, lon, rings)));
 }
 
-function haversineM(latA: number, lonA: number, latB: number, lonB: number): number {
-  const toRad = (value: number) => (value * Math.PI) / 180;
-  const dLat = toRad(latB - latA);
-  const dLon = toRad(lonB - lonA);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(latA)) * Math.cos(toRad(latB)) * Math.sin(dLon / 2) ** 2;
-  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a));
+function segmentDistanceM(lat: number, lon: number, a: number[], b: number[]): number {
+  const rad = Math.PI / 180;
+  const xScale = EARTH_RADIUS_M * rad * Math.cos(lat * rad);
+  const yScale = EARTH_RADIUS_M * rad;
+  const ax = (a[0] - lon) * xScale, ay = (a[1] - lat) * yScale;
+  const bx = (b[0] - lon) * xScale, by = (b[1] - lat) * yScale;
+  const dx = bx - ax, dy = by - ay;
+  const length2 = dx * dx + dy * dy;
+  const t = length2 === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / length2));
+  return Math.hypot(ax + t * dx, ay + t * dy);
 }
 
 export function nearestFeature(collection: FeatureCollection<Polygon | MultiPolygon, Record<string, string>>, lat: number, lon: number) {
   return collection.features.reduce<{ feature: AnyPolygonFeature; metros: number } | null>((best, feature) => {
     const metros = ringsOf(feature)
-      .flat(2)
-      .reduce((min, [vertexLon, vertexLat]) => Math.min(min, haversineM(lat, lon, vertexLat, vertexLon)), Number.POSITIVE_INFINITY);
+      .flat()
+      .reduce((min, ring) => ring.reduce((distance, point, i) => Math.min(distance, segmentDistanceM(lat, lon, point, ring[(i + 1) % ring.length])), min), Number.POSITIVE_INFINITY);
     return best === null || metros < best.metros ? { feature, metros } : best;
   }, null);
 }

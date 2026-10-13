@@ -1,10 +1,9 @@
 import { loadKpis } from "@/lib/kpis";
+import { DEMO_SCOPE } from "@/lib/demo";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_PARTIAL = 206;
-
 export async function GET() {
   const kpis = await loadKpis();
-  return Response.json(kpis, { status: kpis.fallas.length > 0 ? STATUS_PARTIAL : 200, headers: { "cache-control": "public, max-age=300" } });
+  const sinDatos = !kpis.rio && !kpis.lluvia && !kpis.reportes;
+  return Response.json({ ...kpis, incompleto: kpis.fallas.length > 0, alcance: DEMO_SCOPE }, { status: sinDatos ? 503 : 200, headers: { "cache-control": "no-store" } });
 }

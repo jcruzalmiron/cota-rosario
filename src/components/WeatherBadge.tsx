@@ -22,7 +22,7 @@ export function WeatherBadge({ clima }: WeatherBadgeProps) {
   return (
     <div
       className="pointer-events-auto flex items-center gap-3 rounded-md border border-rule bg-panel/95 px-3 py-2 shadow-xl backdrop-blur"
-      title={`${clima.descripcion} · sensación ${clima.sensacion}° · viento ${clima.viento} km/h · medido ${clima.medidoEn.slice(11, 16)}`}
+      title={`${clima.descripcion} · dato modelado · sensación ${clima.sensacion}° · viento ${clima.viento} km/h · fecha ${clima.medidoEn.slice(11, 16)}`}
     >
       <svg viewBox="0 0 24 24" className="size-7 shrink-0 text-ink-soft" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d={ICON_PATHS[clima.icono]} />
@@ -36,7 +36,7 @@ export function WeatherBadge({ clima }: WeatherBadgeProps) {
           <span className="hidden sm:inline">
             humedad {clima.humedad} % · {clima.presion} hPa ·{" "}
           </span>
-          lluvia próx. {clima.ventanaHoras} h {clima.probabilidadLluvia} %
+          lluvia próx. {clima.ventanaHoras} h {clima.probabilidadLluvia === null ? "sin probabilidad disponible" : `${clima.probabilidadLluvia} %`}
         </span>
       </div>
     </div>

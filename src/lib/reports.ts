@@ -1,6 +1,9 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { mkdir, readFile, writeFile, rename, unlink } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
 import path from "node:path";
+import districts from "../../public/data/distritos.json";
+import { featureAt } from "@/lib/lookup";
+import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 
 import { DESCRIPTION_MAX_CHARS, REPORT_TTL_HOURS, REPORT_TYPES, type Report, type ReportType } from "@/lib/reportTypes";
 
@@ -23,6 +26,8 @@ const DATA_DIR = process.env.COTA_DATA_DIR ?? "data";
 const STORE_FILE = path.join(DATA_DIR, "reportes.json");
 
 const ipActivity = new Map<string, { reportes: number[]; confirmaciones: number[] }>();
+interface StoredReport extends Report { confirmationsBy: string[] }
+const city = districts as FeatureCollection<Polygon | MultiPolygon, Record<string, string>>;
 let queue: Promise<unknown> = Promise.resolve();
 
 export class ReportError extends Error {
@@ -37,23 +42,39 @@ function isActive(report: Report, now: number): boolean {
   return now - new Date(report.creadoEn).getTime() < REPORT_TTL_HOURS * MILLIS_PER_HOUR;
 }
 
-async function readStore(): Promise<Report[]> {
+async function readStore(): Promise<StoredReport[]> {
   try {
     const raw = await readFile(STORE_FILE, "utf8");
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as Report[]) : [];
+    if (!Array.isArray(parsed)) throw new Error("Invalid store");
+    return parsed.map((row) => {
+      if (!row || typeof row !== "object" || typeof row.id !== "string" || !Object.hasOwn(REPORT_TYPES, row.tipo) || !Number.isFinite(row.lat) || !Number.isFinite(row.lon) || !Number.isFinite(Date.parse(row.creadoEn)) || typeof row.descripcion !== "string" || !Number.isInteger(row.confirmaciones) || row.confirmaciones < 0 || (row.confirmationsBy !== undefined && (!Array.isArray(row.confirmationsBy) || !row.confirmationsBy.every((key: unknown) => typeof key === "string")))) throw new Error("Invalid report in store");
+      return { ...row, confirmationsBy: row.confirmationsBy ?? [] } as StoredReport;
+    });
   } catch (error: unknown) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return [];
     }
-    console.error("No se pudo leer el archivo de reportes:", error);
-    return [];
+    console.error("No se pudo leer el almacenamiento de reportes:", error instanceof Error ? error.name : "Error");
+    throw new ReportError("Los reportes no están disponibles; no se puede afirmar que no haya aportes.", 503);
   }
 }
 
-async function writeStore(reports: Report[]): Promise<void> {
+async function writeStore(reports: StoredReport[]): Promise<void> {
   await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(STORE_FILE, JSON.stringify(reports));
+  const temporary = `${STORE_FILE}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, JSON.stringify(reports), { flag: "wx", mode: 0o600 });
+    await rename(temporary, STORE_FILE);
+  } catch (error) {
+    await unlink(temporary).catch(() => undefined);
+    throw error;
+  }
+}
+
+function publicReport(report: StoredReport): Report {
+  const { id, lat, lon, tipo, descripcion, creadoEn, confirmaciones } = report;
+  return { id, lat, lon, tipo, descripcion, creadoEn, confirmaciones };
 }
 
 function serialized<T>(task: () => Promise<T>): Promise<T> {
@@ -67,6 +88,12 @@ function recent(times: number[], now: number): number[] {
 }
 
 function enforceRate(ip: string, kind: "reportes" | "confirmaciones", limit: number, now: number): void {
+  for (const [key, activity] of ipActivity) {
+    const cleaned = { reportes: recent(activity.reportes, now), confirmaciones: recent(activity.confirmaciones, now) };
+    if (cleaned.reportes.length + cleaned.confirmaciones.length === 0) ipActivity.delete(key);
+    else ipActivity.set(key, cleaned);
+  }
+  if (!ipActivity.has(ip) && ipActivity.size >= 5000) throw new ReportError("La protección de envíos está ocupada; probá más tarde.", 503);
   const activity = ipActivity.get(ip) ?? { reportes: [], confirmaciones: [] };
   const window = recent(activity[kind], now);
   if (window.length >= limit) {
@@ -105,21 +132,27 @@ export function validateReport(input: NewReportInput): Pick<Report, "lat" | "lon
   if (typeof input.web === "string" && input.web.length > 0) {
     throw new ReportError("Envío rechazado.");
   }
-  if (typeof input.tipo !== "string" || !(input.tipo in REPORT_TYPES)) {
+  if (typeof input.tipo !== "string" || !Object.hasOwn(REPORT_TYPES, input.tipo)) {
     throw new ReportError("Elegí qué estás viendo.");
   }
+  const lat = toCoordinate(input.lat, BOUNDS.south, BOUNDS.north, "La latitud");
+  const lon = toCoordinate(input.lon, BOUNDS.west, BOUNDS.east, "La longitud");
+  if (!featureAt(city, lat, lon)) throw new ReportError("El punto está fuera del área de Rosario cubierta por esta demo.");
   return {
-    lat: toCoordinate(input.lat, BOUNDS.south, BOUNDS.north, "La latitud"),
-    lon: toCoordinate(input.lon, BOUNDS.west, BOUNDS.east, "La longitud"),
+    lat,
+    lon,
     tipo: input.tipo as ReportType,
     descripcion: cleanDescription(input.descripcion),
   };
 }
 
 export async function listReports(): Promise<Report[]> {
-  const now = Date.now();
-  const reports = await readStore();
-  return reports.filter((report) => isActive(report, now)).sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
+  return serialized(async () => {
+    const reports = await readStore();
+    const active = reports.filter((report) => isActive(report, Date.now()));
+    if (active.length !== reports.length) await writeStore(active);
+    return active.map(publicReport).sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
+  });
 }
 
 export function createReport(input: NewReportInput, ip: string): Promise<Report> {
@@ -131,23 +164,25 @@ export function createReport(input: NewReportInput, ip: string): Promise<Report>
     if (activos.length >= MAX_ACTIVE_REPORTS) {
       throw new ReportError("Hay demasiados reportes activos ahora mismo.", 503);
     }
-    const report: Report = { id: randomUUID(), ...datos, creadoEn: new Date(now).toISOString(), confirmaciones: 0 };
+    const report: StoredReport = { id: randomUUID(), ...datos, creadoEn: new Date(now).toISOString(), confirmaciones: 0, confirmationsBy: [] };
     await writeStore([...activos, report]);
-    return report;
+    return publicReport(report);
   });
 }
 
 export function confirmReport(id: string, ip: string): Promise<Report> {
   return serialized(async () => {
     const now = Date.now();
-    enforceRate(ip, "confirmaciones", CONFIRMATIONS_PER_IP_PER_HOUR, now);
     const activos = (await readStore()).filter((report) => isActive(report, now));
     const target = activos.find((report) => report.id === id);
     if (!target) {
       throw new ReportError("Ese reporte ya no está activo.", 404);
     }
-    const updated = { ...target, confirmaciones: target.confirmaciones + 1 };
+    const observer = createHash("sha256").update(`${id}:${ip}`).digest("hex");
+    if (target.confirmationsBy.includes(observer)) return publicReport(target);
+    enforceRate(ip, "confirmaciones", CONFIRMATIONS_PER_IP_PER_HOUR, now);
+    const updated = { ...target, confirmaciones: target.confirmaciones + 1, confirmationsBy: [...target.confirmationsBy, observer] };
     await writeStore(activos.map((report) => (report.id === id ? updated : report)));
-    return updated;
+    return publicReport(updated);
   });
 }

@@ -17,9 +17,10 @@ interface LongHistoryCache {
   serie: RiverReading[];
   origen: RiverHistory["origen"];
   refreshing: boolean;
+  attemptedAt: number;
 }
 
-const cache: LongHistoryCache = { serie: snapshot.serie as RiverReading[], origen: "instantanea", refreshing: false };
+const cache: LongHistoryCache = { serie: snapshot.serie as RiverReading[], origen: "instantanea", refreshing: false, attemptedAt: 0 };
 
 function dayKey(fecha: string): string {
   return fecha.slice(0, 10);
@@ -38,10 +39,11 @@ function daysBetween(earlier: string, later: string): number {
 }
 
 function refreshLongHistoryInBackground(): void {
-  if (cache.refreshing) {
+  if (cache.refreshing || Date.now() - cache.attemptedAt < 5 * 60_000) {
     return;
   }
   cache.refreshing = true;
+  cache.attemptedAt = Date.now();
   fetchRiver(LONG_HISTORY_DAYS)
     .then((snapshotVivo) => {
       cache.serie = mergeSeries(cache.serie, snapshotVivo.serie);
@@ -56,7 +58,9 @@ function refreshLongHistoryInBackground(): void {
 }
 
 export function mergeRiverHistory(recent: RiverReading[]): RiverHistory {
-  const serie = mergeSeries(cache.serie, recent);
+  const merged = mergeSeries(cache.serie, recent);
+  const latest = merged.at(-1)?.fecha;
+  const serie = latest ? merged.filter((reading) => daysBetween(reading.fecha, latest) <= LONG_HISTORY_DAYS) : [];
   const ultimoLargo = cache.serie[cache.serie.length - 1]?.fecha;
   const ultimoReciente = recent[recent.length - 1]?.fecha;
   if (ultimoLargo && ultimoReciente && daysBetween(ultimoLargo, ultimoReciente) > STALE_AFTER_DAYS) {

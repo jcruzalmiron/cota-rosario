@@ -2,11 +2,12 @@ import type { ReactNode } from "react";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { BottomSheet } from "@/components/BottomSheet";
 import { TopBar } from "@/components/TopBar";
+import { DemoNotice } from "@/components/DemoNotice";
 import type { RiskLevel } from "@/lib/risk";
 
 interface AppShellProps {
   activo: string;
-  nivel: RiskLevel;
+  nivel: RiskLevel | null;
   actualizadoEn: string;
   rail: ReactNode;
   lienzo: ReactNode;
@@ -18,6 +19,7 @@ export function AppShell({ activo, nivel, actualizadoEn, rail, lienzo, lienzoInf
     <div className="flex h-full flex-col">
       <AutoRefresh />
       <TopBar activo={activo} nivel={nivel} actualizadoEn={actualizadoEn} />
+      <DemoNotice />
 
       <div className="relative flex min-h-0 flex-1 lg:flex-row">
         <BottomSheet>

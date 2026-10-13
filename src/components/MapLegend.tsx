@@ -25,7 +25,7 @@ export function MapLegend({ zonasOficiales, overlays, conReportes }: MapLegendPr
   const [abierta, setAbierta] = useState(false);
 
   return (
-    <div className="pointer-events-auto flex max-w-sm flex-col overflow-hidden rounded-md border border-rule bg-panel/95 text-[11px] backdrop-blur">
+    <div className="pointer-events-auto flex max-w-sm flex-col overflow-hidden rounded-md border border-rule bg-panel/95 text-xs backdrop-blur">
       <button
         type="button"
         onClick={() => setAbierta((current) => !current)}
@@ -37,12 +37,13 @@ export function MapLegend({ zonasOficiales, overlays, conReportes }: MapLegendPr
             <span key={nivel} className="h-0.5 w-3" style={{ background: RISK_FILL[nivel] }} aria-hidden="true" />
           ))}
         </span>
-        <span className="text-ink">Qué significa cada color</span>
+        <span className="text-ink">Capas y significado de los colores</span>
         <span className="ml-auto" aria-hidden="true">
           {abierta ? "▾" : "▸"}
         </span>
       </button>
 
+      <p className="border-t border-rule px-3 py-2 text-xs text-ink-soft">Clima municipal 2024: capa fija. Contornos: señal orientativa de esta consulta. Gris: evaluación incompleta.</p>
       {abierta ? (
         <div className="flex flex-col gap-3 border-t border-rule px-3 py-3">
           <div className="flex flex-col gap-1.5">

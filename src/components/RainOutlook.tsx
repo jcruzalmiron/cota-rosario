@@ -33,7 +33,7 @@ export function RainOutlook({ lluvia }: RainOutlookProps) {
               <span className="block w-full rounded-sm bg-water/70" style={{ height: `${(dia.milimetros / maximo) * PERCENT}%` }} />
             </span>
             <span className="readout text-[10px] text-ink-faint">{fmtDia(dia.fecha)}</span>
-            <span className="readout text-[10px] text-ink-faint">{dia.probabilidad} %</span>
+            <span className="readout text-[10px] text-ink-faint">{dia.probabilidad === null ? "—" : `${dia.probabilidad} %`}</span>
           </li>
         ))}
       </ul>
@@ -57,7 +57,7 @@ export function RainOutlook({ lluvia }: RainOutlookProps) {
         ))}
       </dl>
       <p className="text-xs leading-relaxed text-ink-soft">
-        Un {mesActual} normal en Rosario trae {lluvia.climatologia.mediaMm} mm; un día de más de {lluvia.climatologia.umbralMm} mm pasa{" "}
+        La referencia histórica de {mesActual} en el snapshot del modelo es de {lluvia.climatologia.mediaMm} mm; un día de más de {lluvia.climatologia.umbralMm} mm pasa{" "}
         {(lluvia.climatologia.probabilidadDia * DAYS_PER_MONTH).toFixed(1)} veces por mes en promedio.
       </p>
     </div>

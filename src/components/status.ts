@@ -7,6 +7,10 @@ export const RISK_FILL: Record<RiskLevel, string> = {
   critico: "#d4483f",
 };
 
+export function riskColor(nivel: RiskLevel | null | undefined): string {
+  return nivel ? RISK_FILL[nivel] : "#98a2b3";
+}
+
 export const RISK_TEXT: Record<RiskLevel, string> = {
   normal: "text-normal",
   atencion: "text-atencion",

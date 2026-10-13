@@ -42,6 +42,6 @@ export async function loadEstado(): Promise<Estado> {
   const rio = settle("ina", rioResult, fallas);
   const lluvia = settle("openMeteo", lluviaResult, fallas);
   const caudal = settle("glofas", caudalResult, fallas);
-  const clima = climaResult.status === "fulfilled" ? climaResult.value : null;
+  const clima = settle("clima", climaResult, fallas);
   return { riesgo: assessRisk(rio, lluvia), rio, lluvia, caudal, clima, fallas };
 }

@@ -11,7 +11,7 @@ interface ReportPanelProps {
 }
 
 export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
-  const { reportes, colocando, borrador, enviando, error, empezarColocacion, cancelar, actualizarBorrador, enviar, confirmar } = estado;
+  const { reportes, colocando, borrador, enviando, error, disponible, confirmados, confirmando, colocarCentro, empezarColocacion, cancelar, actualizarBorrador, enviar, confirmar } = estado;
   const [listaAbierta, setListaAbierta] = useState(false);
 
   return (
@@ -22,6 +22,8 @@ export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
             {borrador ? (
               <>
                 <p className="text-xs text-ink-soft">Marcaste un punto. ¿Qué estás viendo ahí?</p>
+                <p className="readout text-xs text-ink-faint">{borrador.lat.toFixed(5)}, {borrador.lon.toFixed(5)}</p>
+                <p className="text-xs text-ink-soft">Aporte público de demo: usá una descripción sin nombres ni datos personales.</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {(Object.keys(REPORT_TYPES) as ReportType[]).map((tipo) => (
                     <button
@@ -66,6 +68,8 @@ export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
               <>
                 <p className="text-ink">Tocá el mapa donde está el agua.</p>
                 <p className="text-xs text-ink-soft">Podés acercar el mapa antes para apuntar a la cuadra exacta.</p>
+                <button type="button" onClick={colocarCentro} className="rounded-md border border-rule px-3 py-2 text-left text-xs text-ink">Usar el centro visible del mapa</button>
+                <p className="text-xs text-ink-soft">Con teclado, mové el mapa con las flechas y seleccioná su centro.</p>
                 <button type="button" onClick={cancelar} className="self-start text-xs text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink">
                   Cancelar
                 </button>
@@ -84,7 +88,7 @@ export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
               >
                 <span className="size-2 rounded-full bg-water" aria-hidden="true" />
                 Reportes de vecinos
-                <span className="readout ml-auto text-xs text-ink-soft">{reportes.length}</span>
+                <span className="readout ml-auto text-xs text-ink-soft">{disponible === true ? reportes.length : "—"}</span>
               </button>
             ) : (
               <>
@@ -103,7 +107,7 @@ export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
                   className="readout shrink-0 rounded-md border border-rule px-2 py-1.5 text-xs text-ink-soft transition-colors hover:text-ink"
                   title={`Reportes de vecinos en las últimas ${REPORT_TTL_HOURS} h`}
                 >
-                  {reportes.length}
+                  {disponible === true ? reportes.length : "—"}
                 </button>
               </>
             )}
@@ -115,7 +119,7 @@ export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
       {listaAbierta && !colocando ? (
         <div className="flex max-h-64 flex-col overflow-y-auto rounded-md border border-rule bg-panel/95 shadow-xl backdrop-blur">
           {reportes.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-ink-soft">Nadie reportó agua en las últimas {REPORT_TTL_HOURS} horas.</p>
+            <p className="px-3 py-3 text-xs text-ink-soft">{disponible === null ? "Consultando aportes…" : disponible === false ? "Consulta no disponible; no podemos afirmar que no haya aportes." : `No hay aportes registrados en ${REPORT_TTL_HOURS} horas. Esto no descarta agua en la zona.`}</p>
           ) : (
             reportes.slice(0, LIST_LIMIT).map((reporte) => (
               <div key={reporte.id} className="flex items-start gap-2 border-b border-rule-soft px-3 py-2 text-xs last:border-b-0">
@@ -129,10 +133,11 @@ export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
                 <button
                   type="button"
                   onClick={() => confirmar(reporte.id)}
-                  className="readout shrink-0 text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink"
+                  disabled={confirmando !== null || confirmados.includes(reporte.id)}
+                  className="readout shrink-0 text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink disabled:opacity-60"
                   title="Yo también lo veo"
                 >
-                  +{reporte.confirmaciones}
+                  {confirmando === reporte.id ? "…" : confirmados.includes(reporte.id) ? "Confirmado" : `Confirmar · ${reporte.confirmaciones}`}
                 </button>
               </div>
             ))

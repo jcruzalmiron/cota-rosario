@@ -27,14 +27,15 @@ export function Provenance({ sellos }: ProvenanceProps) {
             </div>
             <p className="text-xs text-ink-soft">{fuente.descripcion}</p>
             <a
-              href={fuente.portal}
+              href={fuente.endpoint}
               target="_blank"
               rel="noopener noreferrer"
               className="readout break-all text-[11px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink"
             >
               {fuente.endpoint}
             </a>
-            <p className="text-[11px] text-ink-faint">
+            <a href={fuente.portal} target="_blank" rel="noopener noreferrer" className="text-xs text-water underline underline-offset-4">Publicación y contexto de la fuente</a>
+            <p className="text-xs text-ink-soft">
               {fuente.modelo ? <span className="text-atencion">modelo, no dato oficial · </span> : null}
               {fuente.licencia}
             </p>

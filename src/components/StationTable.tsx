@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import type { RiverStation } from "@/lib/river";
 import { hasUsableThresholds } from "@/lib/risk";
+import { fechaHoraArgentina } from "@/lib/time";
 
 const PAGE_SIZE = 25;
 
@@ -54,6 +55,7 @@ export function StationTable({ estaciones }: StationTableProps) {
               setFiltro(opcion.clave);
               setVisibles(PAGE_SIZE);
             }}
+            aria-pressed={filtro === opcion.clave}
             className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
               filtro === opcion.clave ? "border-ink-soft text-ink" : "border-rule text-ink-soft hover:text-ink"
             }`}
@@ -75,8 +77,8 @@ export function StationTable({ estaciones }: StationTableProps) {
       </div>
 
       <p className="text-xs leading-relaxed text-ink-soft">
-        El INA devuelve {estaciones.length} estaciones, pero sólo {conUmbral} traen un nivel de alerta distinto de cero. En las otras{" "}
-        {estaciones.length - conUmbral} el campo llega en 0 como relleno: compararlas sin filtrar produce cientos de alertas falsas.
+        Esta consulta devuelve {estaciones.length} estaciones; {conUmbral} tienen un umbral de alerta positivo y utilizable.
+        Las restantes no se comparan con alerta. La tabla conserva sus lecturas con fecha; los indicadores de red usan sólo las de hasta 48 horas.
       </p>
 
       <div className="overflow-x-auto">
@@ -89,6 +91,7 @@ export function StationTable({ estaciones }: StationTableProps) {
               <th className="meta px-2 pb-2 text-right">Alerta</th>
               <th className="meta px-2 pb-2 text-right">Evacuación</th>
               <th className="meta px-2 pb-2">Tendencia</th>
+              <th className="meta px-2 pb-2">Medición</th>
             </tr>
           </thead>
           <tbody>
@@ -105,6 +108,7 @@ export function StationTable({ estaciones }: StationTableProps) {
                     {estacion.evacuacion !== null && estacion.evacuacion > 0 ? estacion.evacuacion.toFixed(2) : "—"}
                   </td>
                   <td className="px-2 py-2 text-xs text-ink-soft">{estacion.tendencia}</td>
+                  <td className="readout whitespace-nowrap px-2 py-2 text-xs text-ink-soft">{Number.isFinite(Date.parse(estacion.fecha)) ? fechaHoraArgentina(estacion.fecha) : "Sin fecha válida"}</td>
                 </tr>
               );
             })}

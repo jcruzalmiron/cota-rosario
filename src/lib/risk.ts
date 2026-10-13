@@ -6,7 +6,7 @@ export type RiskLevel = "normal" | "atencion" | "alerta" | "critico";
 export const RISK_ORDER: RiskLevel[] = ["normal", "atencion", "alerta", "critico"];
 
 export const RISK_LABEL: Record<RiskLevel, string> = {
-  normal: "Sin riesgo",
+  normal: "Sin señales elevadas",
   atencion: "Atención",
   alerta: "Alerta",
   critico: "Crítico",
@@ -20,7 +20,7 @@ const ZONE_RAIN_SENSITIVITY: Record<string, number> = { A: 1, B: 1, C: 0.9, D: 0
 
 export interface RiskFactor {
   clave: "rio" | "lluvia";
-  nivel: RiskLevel;
+  nivel: RiskLevel | null;
   titulo: string;
   detalle: string;
   medida: string;
@@ -30,17 +30,17 @@ export interface RiskFactor {
 }
 
 export interface RiskAssessment {
-  nivel: RiskLevel;
+  nivel: RiskLevel | null;
   motivo: string;
   factores: RiskFactor[];
-  zonas: { zona: string; nivel: RiskLevel }[];
+  zonas: { zona: string; nivel: RiskLevel | null }[];
   incompleto: boolean;
   sinDatos: boolean;
   evaluadoEn: string;
 }
 
 export function hasUsableThresholds(station: Pick<RiverStation, "alerta" | "evacuacion">): boolean {
-  return station.alerta !== null && station.alerta > 0;
+  return station.alerta !== null && Number.isFinite(station.alerta) && station.alerta > 0;
 }
 
 function worst(levels: RiskLevel[]): RiskLevel {
@@ -65,10 +65,10 @@ function riverLevel(metros: number, alerta: number, evacuacion: number | null): 
 }
 
 function riverFactor(river: RiverSnapshot | null): RiskFactor {
-  if (!river) {
+  if (!river || !Number.isFinite(river.estacion.metros)) {
     return {
       clave: "rio",
-      nivel: "normal",
+      nivel: null,
       titulo: "Altura del Paraná",
       detalle: "El INA no respondió. La altura del río no entra en esta evaluación.",
       medida: "sin dato",
@@ -84,13 +84,13 @@ function riverFactor(river: RiverSnapshot | null): RiskFactor {
   if (!hasUsableThresholds(estacion)) {
     return {
       clave: "rio",
-      nivel: "normal",
+      nivel: null,
       titulo: "Altura del Paraná",
       detalle: "El INA no publica niveles de alerta válidos para esta estación, así que la altura no suma al riesgo.",
       medida,
       umbral: "sin umbral publicado",
       oficial: true,
-      disponible: true,
+      disponible: false,
     };
   }
 
@@ -121,7 +121,7 @@ function rainFactor(rain: RainSnapshot | null): RiskFactor {
   if (!rain) {
     return {
       clave: "lluvia",
-      nivel: "normal",
+      nivel: null,
       titulo: "Lluvia concentrada",
       detalle: "Open-Meteo no respondió. La lluvia no entra en esta evaluación.",
       medida: "sin dato",
@@ -131,12 +131,13 @@ function rainFactor(rain: RainSnapshot | null): RiskFactor {
     };
   }
 
-  const pico = rain.picoVentana?.milimetros ?? 0;
+  if (!rain.picoVentana || !Number.isFinite(rain.picoVentana.milimetros) || rain.picoVentana.milimetros < 0 || !Number.isFinite(rain.acumulado24h) || rain.acumulado24h < 0) return rainFactor(null);
+  const pico = rain.picoVentana.milimetros;
   const nivel = rainLevel(pico);
   const detalle =
     nivel === "normal"
-      ? "No se pronostica una concentración de lluvia capaz de anegar por sí sola."
-      : `Se pronostican ${pico.toFixed(1)} mm concentrados en dos horas, el rango en que el macrocentro empieza a anegarse.`;
+      ? "La lluvia consultada no supera los umbrales orientativos de esta demo."
+      : `Se pronostican ${pico.toFixed(1)} mm en dos horas: supera un umbral orientativo de esta demo, sin calibración operativa.`;
 
   return {
     clave: "lluvia",
@@ -155,13 +156,14 @@ export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | nul
   const disponibles = factores.filter((factor) => factor.disponible);
   const sinDatos = disponibles.length === 0;
   const incompleto = disponibles.length < factores.length;
-  const nivel = worst(disponibles.map((factor) => factor.nivel));
-  const dominante = disponibles.find((factor) => factor.nivel === nivel);
+  const conocido = worst(disponibles.map((factor) => factor.nivel!));
+  const nivel = sinDatos || (incompleto && conocido === "normal") ? null : conocido;
+  const dominante = disponibles.find((factor) => factor.nivel === conocido);
   const caidas = factores.filter((factor) => !factor.disponible).map((factor) => factor.titulo.toLowerCase());
 
   const motivoBase =
-    nivel === "normal"
-      ? "Ni la altura del río ni la lluvia pronosticada alcanzan un umbral de riesgo."
+    conocido === "normal"
+      ? "Los factores disponibles no superan los umbrales del panel; esto no descarta agua en una cuadra ni garantiza seguridad."
       : `${dominante?.titulo}: ${dominante?.detalle}`;
 
   const motivo = sinDatos
@@ -171,10 +173,10 @@ export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | nul
       : motivoBase;
 
   const picoLluvia = rain?.picoVentana?.milimetros ?? 0;
-  const zonas = Object.entries(ZONE_RAIN_SENSITIVITY).map(([zona, peso]) => ({
-    zona,
-    nivel: worst([rainLevel(picoLluvia * peso), factores[0].nivel]),
-  }));
+  const zonas = Object.entries(ZONE_RAIN_SENSITIVITY).map(([zona, peso]) => {
+    const conocidoZona = worst([...(factores[1].disponible ? [rainLevel(picoLluvia * peso)] : []), ...(factores[0].nivel ? [factores[0].nivel] : [])]);
+    return { zona, nivel: sinDatos || (incompleto && conocidoZona === "normal") ? null : conocidoZona };
+  });
 
   return { nivel, motivo, factores, zonas, incompleto, sinDatos, evaluadoEn: new Date().toISOString() };
 }
@@ -204,3 +206,7 @@ export function simulate({ metros, alerta, evacuacion, picoLluviaMm }: Simulatio
 }
 
 export const RAIN_THRESHOLDS = { atencion: RAIN_ATENCION_MM, alerta: RAIN_ALERTA_MM, critico: RAIN_CRITICO_MM };
+
+export function riskLabel(nivel: RiskLevel | null | undefined): string {
+  return nivel ? RISK_LABEL[nivel] : "Evaluación incompleta";
+}

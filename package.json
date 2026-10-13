@@ -6,13 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src scripts tests",
     "build:data": "node scripts/build-flood-zones.mjs && node scripts/build-terrain.mjs && node scripts/build-riesgo-climatico.mjs && node scripts/build-defensa-civil.mjs && node scripts/build-modelos.mjs && node scripts/build-river-history.mjs",
-    "tunnel": "cloudflared tunnel --config cloudflared.yml --url http://127.0.0.1:3200"
+    "tunnel": "cloudflared tunnel --config cloudflared.yml --url http://127.0.0.1:3200",
+    "typecheck": "next typegen && tsc --noEmit -p .",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
-    "next": "16.3.6",
+    "next": "^16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -23,9 +25,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.6",
-    "sharp": "^0.35.4",
+    "eslint-config-next": "^16.3.8",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
