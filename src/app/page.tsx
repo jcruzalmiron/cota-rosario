@@ -37,10 +37,15 @@ const CONSEJOS: Record<string, string[]> = {
   ],
 };
 
+const CONSEJOS_INCOMPLETO = [
+  "La evaluación está incompleta: consultá las fuentes disponibles y las comunicaciones oficiales.",
+  "Los aportes de vecinos son señales para verificar; su ausencia no descarta agua en la zona.",
+];
+
 export default async function VecinosPage() {
   const estado = await loadEstado();
   const { riesgo, rio, lluvia, clima, fallas } = estado;
-  const consejos = riesgo.incompleto ? ["La evaluación está incompleta: consultá las fuentes disponibles y las comunicaciones oficiales.", "Los aportes de vecinos son señales para verificar; su ausencia no descarta agua en la zona."] : CONSEJOS[riesgo.nivel ?? "normal"];
+  const consejos = riesgo.nivel === null ? CONSEJOS_INCOMPLETO : riesgo.incompleto ? [...CONSEJOS[riesgo.nivel], CONSEJOS_INCOMPLETO[0]] : CONSEJOS[riesgo.nivel];
   const fallaDe = (fuente: string) => fallas.find((falla) => falla.fuente === fuente);
   const titulo = riesgo.nivel === null
     ? "Faltan datos para una evaluación completa"

@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { refreshSources } from "@/app/actions";
 
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -10,14 +9,11 @@ export function AutoRefresh() {
   const router = useRouter();
 
   useEffect(() => {
-    let refreshing = false;
-    const refresh = async () => {
+    // Cached source responses expire well before the next tick, so a plain refresh already brings
+    // fresh data without clearing the shared server cache for every open tab.
+    const refresh = () => {
       if (document.visibilityState === "visible") {
-        if (refreshing) return;
-        refreshing = true;
-        try { await refreshSources(); router.refresh(); }
-        catch { /* Keep the current view and its original timestamps if the connection fails. */ }
-        finally { refreshing = false; }
+        router.refresh();
       }
     };
     const interval = window.setInterval(refresh, REFRESH_MS);

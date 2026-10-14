@@ -1,5 +1,7 @@
 const TTL_MS = 60_000;
 const MAX_ENTRIES = 32;
+// The refresh action is public: never let callers force upstream requests more often than this.
+const MIN_CLEAR_INTERVAL_MS = 10_000;
 
 interface Entry {
   promise: Promise<unknown>;
@@ -9,6 +11,7 @@ interface Entry {
 // Shared across server route bundles in this process; never sent to the browser.
 const runtime = globalThis as typeof globalThis & { __cotaLiveSources?: Map<string, Entry> };
 const entries = runtime.__cotaLiveSources ??= new Map<string, Entry>();
+let lastClearAt = Number.NEGATIVE_INFINITY;
 
 export function readLiveSource<T>(source: string, load: () => Promise<T>): Promise<T> {
   const now = Date.now();
@@ -36,6 +39,9 @@ export function readLiveSource<T>(source: string, load: () => Promise<T>): Promi
   return entry.promise as Promise<T>;
 }
 
-export function clearLiveSources(): void {
+export function clearLiveSources(now = Date.now()): boolean {
+  if (now - lastClearAt < MIN_CLEAR_INTERVAL_MS) return false;
+  lastClearAt = now;
   entries.clear();
+  return true;
 }
