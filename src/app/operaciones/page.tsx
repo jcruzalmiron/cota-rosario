@@ -18,7 +18,7 @@ import { loadEstado } from "@/lib/estado";
 import { loadKpis, type Kpis } from "@/lib/kpis";
 import { loadPredicciones } from "@/lib/predicciones";
 import { buildParte, buildRecomendaciones } from "@/lib/recomendaciones";
-import { PARANA_GLOFAS_CELL, ROSARIO } from "@/lib/sources";
+import { PARANA_GLOFAS_CELL } from "@/lib/sources";
 import { hasUsableThresholds } from "@/lib/risk";
 
 export const dynamic = "force-dynamic";
@@ -115,11 +115,10 @@ export default async function OperacionesPage() {
         rail={
           <div className="flex flex-col">
             <section className="px-5 py-6 sm:px-6">
-              <p className="meta">Exploración operativa{riesgo.incompleto ? " · evaluación parcial" : ""}</p>
+              <p className="meta">Seguimiento hídrico{riesgo.incompleto ? " · evaluación parcial" : ""}</p>
               <h1 className="mt-2 text-xl font-semibold tracking-tight text-ink">Operaciones</h1>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                Las mismas fuentes que ve el vecino, sin redondear: la red completa del INA, el caudal del Paraná y un simulador para ensayar
-                escenarios sobre el mapa.
+                Indicadores del Paraná, lluvia reciente y prevista, estaciones del INA y un simulador para comparar escenarios sobre el mapa.
               </p>
             </section>
 
@@ -128,8 +127,7 @@ export default async function OperacionesPage() {
             <section className="hairline px-5 py-6 sm:px-6">
               <h2 className="meta">Sugerencias para revisar</h2>
               <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-                Recomendaciones derivadas de los datos de esta vista, con el número que las dispara. Son reglas fijas y explicadas en la documentación, no una
-                opinión: la decisión sigue siendo de quien opera.
+                Sugerencias basadas en los indicadores y reportes disponibles. Cada una muestra el dato que la motiva.
               </p>
               <div className="mt-4">
                 <Recomendaciones recomendaciones={recomendaciones} parte={parte} />
@@ -282,21 +280,20 @@ export default async function OperacionesPage() {
                 <p className="text-xs leading-relaxed text-ink-soft">
                   Río: variaciones sobre la serie diaria del INA; el percentil compara la altura de hoy con los últimos 210 días; el ritmo es una recta de
                   mínimos cuadrados sobre 14 días. Lluvia caída: horas pasadas del modelo de Open-Meteo, no un pluviómetro de Rosario. Mes en curso:
-                  archivo de Open-Meteo con fecha de cobertura contra la referencia histórica del mismo mes. El snapshot histórico no fijaba un modelo de reanálisis. Aguas arriba: margen = alerta − altura; se excluyen lecturas de más de 48 h.
+                  archivo de Open-Meteo con fecha de cobertura contra la referencia histórica del mismo mes. Aguas arriba: margen = alerta − altura; se excluyen lecturas de más de 48 h.
                   Reportes: los cargados por vecinos en las últimas 24 h, ubicados por distrito. Todo en JSON en <span className="readout">/api/kpis</span>.
                 </p>
               </DocsSection>
               <DocsSection titulo="El simulador">
                 <p className="text-xs leading-relaxed text-ink-soft">
                   Usa exactamente el mismo modelo que la vista pública: mover los controles pinta el mapa con el escenario, no altera ningún dato real ni
-                  queda guardado. Sirve para comparar escenarios hipotéticos durante la capacitación.
+                  queda guardado. Permite comparar cómo cambian los indicadores y las zonas bajo distintas condiciones.
                 </p>
               </DocsSection>
               <DocsSection titulo="El caudal">
                 <p className="text-xs leading-relaxed text-ink-soft">
-                  Es el caudal modelado por GloFAS (Copernicus), no una medición. En las coordenadas del centro de Rosario ({ROSARIO.lat}, {ROSARIO.lon})
-                  GloFAS devuelve 0,03 m³/s porque cae en una celda sin cauce; este panel consulta la celda del canal ({PARANA_GLOFAS_CELL.lat},{" "}
-                  {PARANA_GLOFAS_CELL.lon}).
+                  Es una estimación de GloFAS (Copernicus) para la celda del canal del Paraná frente a Rosario ({PARANA_GLOFAS_CELL.lat},{" "}
+                  {PARANA_GLOFAS_CELL.lon}), expresada en metros cúbicos por segundo.
                 </p>
               </DocsSection>
               <DocsSection titulo="Fuentes y última consulta">

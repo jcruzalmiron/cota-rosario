@@ -57,7 +57,7 @@ export function RainOutlook({ lluvia }: RainOutlookProps) {
         ))}
       </dl>
       <p className="text-xs leading-relaxed text-ink-soft">
-        La referencia histórica de {mesActual} en el snapshot del modelo es de {lluvia.climatologia.mediaMm} mm; un día de más de {lluvia.climatologia.umbralMm} mm pasa{" "}
+        La referencia histórica de {mesActual} en el archivo de Open-Meteo es de {lluvia.climatologia.mediaMm} mm; un día de más de {lluvia.climatologia.umbralMm} mm pasa{" "}
         {(lluvia.climatologia.probabilidadDia * DAYS_PER_MONTH).toFixed(1)} veces por mes en promedio.
       </p>
     </div>

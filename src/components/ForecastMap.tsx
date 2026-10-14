@@ -74,7 +74,7 @@ export function ForecastMap({ distritos, ventanaDias, esquina }: ForecastMapProp
           }).addTo(map);
           layer.bindTooltip(
             entry
-              ? `${titulo(nombre)} · ${entry.esperados.toFixed(1)} casos ilustrativos en ${ventanaDias} días · reparto histórico sin validación local`
+              ? `${titulo(nombre)} · ${entry.esperados.toFixed(1)} casos del escenario en ${ventanaDias} días · distribución histórica`
               : `${titulo(nombre)} · escenario no disponible`,
             { sticky: true },
           );
@@ -97,9 +97,9 @@ export function ForecastMap({ distritos, ventanaDias, esquina }: ForecastMapProp
         <div className="pointer-events-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-md border border-rule bg-panel/95 px-3 py-2 backdrop-blur">
           <span className="flex items-center gap-1.5 text-[11px] text-ink-soft">
             <span className="size-2.5 rounded-sm" style={{ background: FILL_COLOR }} aria-hidden="true" />
-            {distritos.length ? `Reparto ilustrativo a ${ventanaDias} días por distrito` : "Escenario no disponible · sin relleno"}
+            {distritos.length ? `Distribución por distrito · ${ventanaDias} días` : "Escenario no disponible"}
           </span>
-          <span className="meta">demo · reparto sin calibrar</span>
+          <span className="meta">proyección orientativa · modelo mensual</span>
         </div>
       </div>
       {error ? <p className="absolute left-4 top-4 z-[500] rounded-md border border-rule bg-panel px-3 py-2 text-xs text-alerta">{error}</p> : null}

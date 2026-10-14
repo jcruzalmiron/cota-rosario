@@ -17,15 +17,15 @@ export function FloodingOutlook({ anegamientos }: FloodingOutlookProps) {
       <div className="flex items-baseline gap-3">
         <span className="readout text-5xl font-medium text-ink">{anegamientos.esperadosCiudad.toFixed(1)}</span>
         <span className="text-sm leading-tight text-ink-soft">
-          casos ilustrativos del modelo
+          casos del escenario
           <br />
-          adaptado a {anegamientos.ventanaDias} días
+          a {anegamientos.ventanaDias} días
         </span>
       </div>
       <p className="text-xs leading-relaxed text-ink-soft">
         Con <span className="readout text-ink">{anegamientos.lluvia.total} mm</span> pronosticados y un pico de{" "}
         <span className="readout text-ink">{anegamientos.lluvia.max2h} mm</span> en 2 horas. Estimación propia a partir del historial de Defensa Civil y
-        la lluvia de cada mes. Error absoluto medio de validación mensual: {anegamientos.modelo.validacionCruzada.maeModelo} casos. Este error no es un intervalo de la semana.
+        la lluvia de cada mes.
       </p>
       <ul className="flex flex-col gap-2">
         {anegamientos.porDistrito.map((entry) => (
@@ -38,7 +38,7 @@ export function FloodingOutlook({ anegamientos }: FloodingOutlookProps) {
           </li>
         ))}
       </ul>
-      <p className="text-xs leading-relaxed text-atencion">Reparto por participación histórica de cada distrito. La escala diaria/semanal y sus probabilidades no están validadas; se muestran para explorar el método.</p>
+      <p className="text-xs leading-relaxed text-ink-soft">Proyección orientativa de un modelo mensual. La distribución por distrito sigue su participación histórica en los registros de Defensa Civil.</p>
     </div>
   );
 }

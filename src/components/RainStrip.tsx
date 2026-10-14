@@ -58,7 +58,7 @@ export function RainStrip({ lluvia }: RainStripProps) {
       </div>
 
       <p className="text-xs leading-relaxed text-ink-soft">
-        La barra marca milímetros por hora y su opacidad representa la probabilidad cuando está disponible. La demo compara el pico de dos horas de las próximas 48 con umbrales orientativos; no representa el drenaje de cada cuadra.
+        Cada barra muestra la lluvia prevista por hora. Su opacidad indica la probabilidad cuando está disponible. El panel compara el pico de dos horas de las próximas 48 con umbrales orientativos.
       </p>
     </div>
   );

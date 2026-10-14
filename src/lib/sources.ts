@@ -59,7 +59,7 @@ export const SOURCES: Record<string, SourceRef> = {
   riesgoClima: {
     id: "riesgoClima",
     organismo: "Municipalidad de Rosario · Mapas de Riesgo Climático 2024",
-    descripcion: "Capa fija de riesgo climático de 2024, rasterizada en esta demo; la resolución limita la consulta puntual",
+    descripcion: "Mapa municipal de riesgo climático de 2024; capa territorial con resolución limitada para la consulta puntual",
     endpoint: "https://infomapa.rosario.gob.ar/wms/ambiente?LAYERS=riesgo_vivienda_precipita",
     portal: "https://www.rosario.gob.ar/inicio/mapas-de-riesgo-climatico-rosario-2024",
     licencia: "Capa pública de InfoMapa · elaborada con NAP Global Network y la Dirección Nacional de Cambio Climático",
@@ -67,15 +67,15 @@ export const SOURCES: Record<string, SourceRef> = {
   defensaCivil: {
     id: "defensaCivil",
     organismo: "Municipalidad de Rosario · Defensa Civil",
-    descripcion: "Snapshot de anegamientos atendidos por distrito y mes, enero de 2021 a enero de 2024, cruzados con la lluvia mensual del archivo de Open-Meteo",
+    descripcion: "Registros de anegamientos atendidos por distrito y mes, enero de 2021 a enero de 2024, relacionados con la lluvia mensual del archivo de Open-Meteo",
     endpoint: "https://datosabiertos.rosario.gob.ar/dataset/intervenciones-defensa-civil",
     portal: "https://datosabiertos.rosario.gob.ar",
-    licencia: "Datos abiertos municipales · lluvia histórica vía Open-Meteo (modelo no fijado en el snapshot), CC BY 4.0",
+    licencia: "Datos abiertos municipales · lluvia histórica vía Open-Meteo, CC BY 4.0",
   },
   modelos: {
     id: "modelos",
     organismo: "Modelos estadísticos de este panel",
-    descripcion: "Modelos exploratorios: Poisson mensual adaptado a siete días, Gumbel sobre el snapshot histórico de Open-Meteo y ajuste altura–caudal INA–GloFAS. Sin validación operativa",
+    descripcion: "Escenarios estadísticos basados en registros mensuales, lluvia histórica y caudal. Distribución semanal orientativa y tendencias del Paraná",
     endpoint: "/data/modelos.json",
     portal: "/predicciones",
     licencia: "Calculado en este panel sobre datos públicos · no es pronóstico oficial",

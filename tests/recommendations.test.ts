@@ -15,6 +15,6 @@ test("resumen y sugerencias no declaran calma sin datos", () => {
   const texto = buildParte(insumos).texto;
   assert.match(texto, /evaluación incompleta/);
   assert.match(texto, /No se pudieron consultar los reportes/);
-  assert.match(texto, /sin garantía operativa/);
+  assert.match(texto, /Las estimaciones son orientativas/);
   assert.doesNotMatch(texto, /sin riesgo|No hay aportes/);
 });

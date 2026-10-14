@@ -23,7 +23,7 @@ export function ReportPanel({ estado, soloLectura = false }: ReportPanelProps) {
               <>
                 <p className="text-xs text-ink-soft">Marcaste un punto. ¿Qué estás viendo ahí?</p>
                 <p className="readout text-xs text-ink-faint">{borrador.lat.toFixed(5)}, {borrador.lon.toFixed(5)}</p>
-                <p className="text-xs text-ink-soft">Aporte público de demo: usá una descripción sin nombres ni datos personales.</p>
+                <p className="text-xs text-ink-soft">Tu reporte será público. Describí lo que observás sin incluir nombres ni datos personales.</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {(Object.keys(REPORT_TYPES) as ReportType[]).map((tipo) => (
                     <button

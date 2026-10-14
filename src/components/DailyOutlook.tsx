@@ -22,7 +22,7 @@ export function DailyOutlook({ dias, alerta }: DailyOutlookProps) {
         <tr className="meta text-left">
           <th className="pb-2 font-normal">Día</th>
           <th className="pb-2 font-normal">Lluvia</th>
-          <th className="pb-2 font-normal">Reparto ilustrativo</th>
+          <th className="pb-2 font-normal">Casos del escenario</th>
           <th className="pb-2 font-normal">Río estimado</th>
         </tr>
       </thead>

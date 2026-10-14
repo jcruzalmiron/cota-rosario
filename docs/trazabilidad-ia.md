@@ -33,3 +33,9 @@ El equipo señaló demora al cambiar de vista y pidió no generar datos dummy. S
 ## Comprobación de la última versión
 
 Ante «checkeaste que todo haya quedado bien?», Codex revisó la compilación, tipos, lint, pruebas de lógica, APIs y navegador con fuentes reales. Encontró un desfase entre la referencia actualizada del simulador y sus controles; se corrigió el reinicio de esos controles y se preservaron los datos faltantes sin asumir cero. No se generaron aportes ficticios. Los resultados, el alcance de las pruebas y el error 504 pendiente del histórico largo del INA están en la [revisión de la última versión](verificacion-final-demo.md).
+
+## Textos para presentación pública, 14 de octubre
+
+El equipo pidió presentar Cota como producto ante el público y retirar los comentarios internos de capacitación y trazabilidad de la interfaz. Codex revisó la guía, los encabezados de las vistas, los mapas, los reportes y el parte de situación. Los textos explican funciones, fuentes y fechas; los escenarios mantienen su carácter orientativo y la descripción de su escala mensual. Esta revisión modifica la presentación del producto, sin recalibrar modelos ni generar aportes ficticios.
+
+Compilación con TypeScript y lint correctos. Se revisaron la guía y las tres vistas en navegador con fuentes reales, sin las frases internas señaladas por el equipo. El resumen para compartir conserva decimales de lluvia. No se añadieron pruebas; se actualizó la aserción existente del resumen para comprobar su nueva descripción orientativa. Las pruebas unitarias no se ejecutaron en este ajuste.

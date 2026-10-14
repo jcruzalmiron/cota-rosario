@@ -15,8 +15,8 @@ const QUESTIONS_PER_SLIDE = 4;
 const CIFRAS = [
   { valor: "87", etiqueta: "zonas oficiales de inundación" },
   { valor: "7", etiqueta: "pasos de construcción con IA" },
-  { valor: "86", etiqueta: "años de lluvia para medir rarezas" },
-  { valor: "Demo", etiqueta: "calidad sin garantía operativa" },
+  { valor: "86", etiqueta: "años de registros de lluvia" },
+  { valor: "3", etiqueta: "vistas para consultar la ciudad" },
 ];
 const INSTITUCIONES = [
   { nombre: "Tecnoteca", archivo: "/logos/tecnoteca.png", ancho: 1200, alto: 597 },
@@ -74,14 +74,14 @@ export default async function ComoFuncionaPage() {
       resplandor: true,
       contenido: (
         <div className="flex flex-col gap-8">
-          <span className="readout text-xs text-ink-faint">Guía para cualquiera · sin saber de clima ni de ríos</span>
+          <span className="readout text-xs text-ink-faint">Río, lluvia y territorio · Rosario</span>
           <h1 className="text-5xl font-semibold leading-[0.95] tracking-tight text-ink sm:text-7xl lg:text-8xl">
             Cómo funciona
             <br />
             Cota
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-ink-soft">
-            Qué mira, de dónde saca cada número, qué significan las palabras que usa y qué herramienta sirve para qué.
+            Lecturas del Paraná, pronósticos de lluvia y mapas de Rosario. Conocé las herramientas para consultar tu zona, seguir indicadores y comparar escenarios.
           </p>
           <div className="grid grid-cols-2 gap-6 border-t border-rule pt-6 sm:grid-cols-4">
             {CIFRAS.map((cifra) => (
@@ -100,7 +100,7 @@ export default async function ComoFuncionaPage() {
       titulo: queEs.titulo,
       contenido: (
         <div className="flex flex-col gap-10">
-          <Capitulo numero="01" titulo="Una demo con límites explícitos" />
+          <Capitulo numero="01" titulo="La ciudad, en un mismo mapa" />
           <div className="grid gap-8 lg:grid-cols-3">
             {queEs.parrafos.map((parrafo, index) => (
               <p key={parrafo} className={`leading-relaxed ${index === 0 ? "text-xl text-ink lg:col-span-3 lg:text-2xl" : "border-t border-rule pt-5 text-sm text-ink-soft"}`}>
@@ -154,7 +154,7 @@ export default async function ComoFuncionaPage() {
         </div>
       ),
     },
-    ...chunk(PROCESO, 4).map((grupo, index) => ({ id: `construccion-${index}`, titulo: `Cómo la construimos ${index + 1}`, contenido: <div><Capitulo numero={`03.${index + 1}`} titulo="De la idea al producto" bajada="Proceso informado por el equipo para la capacitación. Las instrucciones originales a la IA no están conservadas en este repositorio." /><ConceptosSlide lista={grupo} /></div> })),
+    ...chunk(PROCESO, 4).map((grupo, index) => ({ id: `construccion-${index}`, titulo: `Cómo la construimos ${index + 1}`, contenido: <div><Capitulo numero={`03.${index + 1}`} titulo="De la idea al producto" /><ConceptosSlide lista={grupo} /></div> })),
     ...HERRAMIENTAS.map((herramienta, index) => ({
       id: `herramienta-${index}`,
       titulo: herramienta.vista,
@@ -256,13 +256,12 @@ export default async function ComoFuncionaPage() {
         <div className="flex flex-col gap-8">
           <span className="readout text-xs text-ink-faint">08</span>
           <h2 className="text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-6xl">
-            Entender antes,
+            Empezá por
             <br />
-            aprender y contrastar.
+            tu zona.
           </h2>
           <p className="max-w-xl text-base leading-relaxed text-ink-soft">
-            Cota no es un servicio oficial de alerta. Ante una emergencia, Defensa Civil <span className="readout text-ink">103</span>. Todo el detalle
-            técnico está al pie de cada vista, en «Documentación», y en los JSON públicos.
+            Buscá una dirección, consultá las condiciones del río y la lluvia, o compartí lo que observás en tu cuadra.
           </p>
           <div className="flex flex-wrap gap-3">
             {HERRAMIENTAS.map((herramienta) => (

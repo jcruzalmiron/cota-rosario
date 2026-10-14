@@ -136,8 +136,8 @@ function rainFactor(rain: RainSnapshot | null): RiskFactor {
   const nivel = rainLevel(pico);
   const detalle =
     nivel === "normal"
-      ? "La lluvia consultada no supera los umbrales orientativos de esta demo."
-      : `Se pronostican ${pico.toFixed(1)} mm en dos horas: supera un umbral orientativo de esta demo, sin calibración operativa.`;
+      ? "La lluvia prevista está por debajo de los umbrales orientativos."
+      : `Se pronostican ${pico.toFixed(1)} mm en dos horas: supera el umbral orientativo del panel.`;
 
   return {
     clave: "lluvia",
@@ -163,7 +163,7 @@ export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | nul
 
   const motivoBase =
     conocido === "normal"
-      ? "Los factores disponibles no superan los umbrales del panel; esto no descarta agua en una cuadra ni garantiza seguridad."
+      ? "El río y la lluvia están por debajo de los umbrales de referencia. Consultá también las condiciones de tu zona."
       : `${dominante?.titulo}: ${dominante?.detalle}`;
 
   const motivo = sinDatos

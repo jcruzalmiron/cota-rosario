@@ -62,7 +62,7 @@ function reglasRio({ estado, kpis }: Insumos): Recomendacion[] {
       id: "rio-umbral",
       prioridad: "alta",
       titulo: nivelRio === "critico" ? "El río superó el nivel de evacuación" : "El río superó el nivel de alerta",
-      accion: "Contrastar la lectura con el boletín oficial y revisar qué protocolo correspondería. La demo no activa avisos ni indica evacuaciones.",
+      accion: "Contrastar la lectura con el boletín oficial y consultar el protocolo del organismo responsable.",
       porQue: `Altura ${rio.actual.toFixed(2)} m contra alerta ${estacion.alerta?.toFixed(2) ?? "—"} m y evacuación ${estacion.evacuacion?.toFixed(2) ?? "—"} m del INA.`,
     });
   } else if (rio.margenAlertaM !== null && (rio.margenAlertaM <= MARGIN_ALERT_M || (rio.diasHastaAlerta !== null && rio.diasHastaAlerta <= DAYS_TO_ALERT_SOON))) {
@@ -109,8 +109,8 @@ function reglasLluvia({ estado, kpis, predicciones }: Insumos): Recomendacion[] 
     out.push({
       id: "lluvia-pico",
       prioridad: fuerte ? "alta" : "media",
-      titulo: fuerte ? "Pico de lluvia sobre el umbral orientativo de la demo" : "Lluvia concentrada en las próximas 48 h",
-      accion: `Revisar el pronóstico y planificar una inspección de drenaje para el ${fmtDia(pico.desde.slice(0, 10))}${distritoTop ? `, empezando por ${titulo(distritoTop.distrito)}` : ""}. La elección de lugares requiere registros locales; el reparto histórico de la demo no basta.`,
+      titulo: fuerte ? "Pico de lluvia sobre el umbral orientativo" : "Lluvia concentrada en las próximas 48 h",
+      accion: `Revisar el pronóstico y planificar una inspección de drenaje para el ${fmtDia(pico.desde.slice(0, 10))}${distritoTop ? `, empezando por ${titulo(distritoTop.distrito)}` : ""}. Definir los puntos de inspección con registros locales.`,
       porQue: `Pico pronosticado de ${pico.milimetros} mm en 2 h a partir de las ${pico.desde.slice(11, 16)} del ${fmtDia(pico.desde.slice(0, 10))}; el umbral de ${fuerte ? "alerta" : "atención"} es ${fuerte ? RAIN_THRESHOLDS.alerta : RAIN_THRESHOLDS.atencion} mm.`,
     });
   } else if (balance && balance.prevista48h >= FORECAST_RAIN_48H_MM) {
@@ -138,7 +138,7 @@ function reglasLluvia({ estado, kpis, predicciones }: Insumos): Recomendacion[] 
       id: "lluvia-saturacion",
       prioridad: "baja",
       titulo: "El acumulado mensual supera la referencia histórica",
-      accion: "Revisar humedad del suelo y registros locales antes de interpretar el acumulado; la demo no mide saturación.",
+      accion: "Complementar el acumulado de lluvia con registros locales de humedad del suelo.",
       porQue: `Van ${mes.acumuladoMm.toFixed(0)} mm en el mes, el ${Math.round((mes.acumuladoMm / normal) * PERCENT)} % de un mes normal (${normal} mm).`,
     });
   }
@@ -156,9 +156,9 @@ function reglasAnegamientos({ predicciones }: Insumos): Recomendacion[] {
       {
         id: "anegamientos-guardias",
         prioridad: "baja",
-        titulo: "Revisar el escenario ilustrativo de anegamientos",
+        titulo: "Revisar el escenario de anegamientos",
         accion: "Contrastar el resultado con registros recientes y criterio local antes de usarlo para planificar recursos.",
-        porQue: `La adaptación del modelo mensual muestra ${anegamientos.esperadosCiudad.toFixed(1)} casos ilustrativos en ${anegamientos.ventanaDias} días${top ? `, ${top.esperados.toFixed(1)} en ${titulo(top.distrito)}` : ""}. El reparto por día y distrito no tiene validación operativa.`,
+        porQue: `La proyección orientativa del modelo mensual muestra ${anegamientos.esperadosCiudad.toFixed(1)} casos en ${anegamientos.ventanaDias} días${top ? `, ${top.esperados.toFixed(1)} en ${titulo(top.distrito)}` : ""}, distribuidos según la participación histórica de cada distrito.`,
       },
     ];
   }
@@ -232,7 +232,7 @@ function reglaCalma(insumos: Insumos, existentes: Recomendacion[]): Recomendacio
       prioridad: "baja",
       titulo: "Sin umbrales elevados en los insumos disponibles",
       accion: "Aprovechar para limpiar sumideros en Centro (el distrito que concentra los anegamientos), probar las bombas del Ludueña y actualizar el padrón de vecinos ribereños.",
-      porQue: `${balance ? `${balance.prevista48h} mm previstos en 48 h` : "Balance no disponible"}${margen !== null && margen !== undefined ? ` y ${margen.toFixed(2)} m de margen hasta la alerta del río` : ""}. La demo no garantiza las condiciones de cada cuadra.`,
+      porQue: `${balance ? `${balance.prevista48h} mm previstos en 48 h` : "Balance no disponible"}${margen !== null && margen !== undefined ? ` y ${margen.toFixed(2)} m de margen hasta la alerta del río` : ""}.`,
     },
   ];
 }
@@ -250,7 +250,7 @@ export function buildParte({ estado, kpis, predicciones }: Insumos): ParteDeSitu
   const reportes = kpis.reportes;
   const enOnda = kpis.aguasArriba.filter((station) => station.esAguasArriba && station.tendencia.toLowerCase() === "crece").length;
   const frases: string[] = [];
-  frases.push(`Demo Cota · resumen de la consulta ${estado.riesgo.evaluadoEn.slice(0, 10)} a las ${horaArgentina(estado.riesgo.evaluadoEn)}. Señal del panel: ${riskLabel(estado.riesgo.nivel).toLowerCase()}${estado.riesgo.incompleto ? "; evaluación parcial" : ""}. Datos y modelos con cobertura y precisión sin garantía operativa.`);
+  frases.push(`Cota · resumen de la consulta ${estado.riesgo.evaluadoEn.slice(0, 10)} a las ${horaArgentina(estado.riesgo.evaluadoEn)}. Señal del panel: ${riskLabel(estado.riesgo.nivel).toLowerCase()}${estado.riesgo.incompleto ? "; evaluación parcial" : ""}. Las estimaciones son orientativas y se complementan con las condiciones locales y las comunicaciones oficiales.`);
   if (rio && estacion) {
     frases.push(
       `El Paraná mide ${rio.actual.toFixed(2)} m en la escala de Rosario (${rio.variacion24hCm !== null ? `${rio.variacion24hCm > 0 ? "+" : ""}${rio.variacion24hCm} cm en 24 h` : "sin variación diaria"}), a ${rio.margenAlertaM?.toFixed(2) ?? "—"} m del nivel de alerta del INA${rio.ritmoCmDia !== null && rio.ritmoCmDia > 0 && rio.diasHastaAlerta !== null ? `; al ritmo actual de ${rio.ritmoCmDia} cm/día la alcanzaría en ${rio.diasHastaAlerta} días${rio.diasHastaAlerta > 7 ? ", fuera de la ventana semanal" : ""}` : ""}. Aguas arriba, ${enOnda} de ${kpis.aguasArriba.filter((entry) => entry.esAguasArriba).length} estaciones están en crecida.`,
@@ -258,11 +258,11 @@ export function buildParte({ estado, kpis, predicciones }: Insumos): ParteDeSitu
   }
   if (balance) {
     const pico = estado.lluvia?.picoVentana;
-    frases.push(`El modelo meteorológico estima ${balance.caido24h.toFixed(0)} mm pasados en las últimas 24 h y se prevén ${balance.prevista48h.toFixed(0)} mm para las próximas 48 h${pico && pico.milimetros > 0 ? `, con un pico de ${pico.milimetros} mm en 2 h` : ""}.`);
+    frases.push(`El modelo meteorológico estima ${balance.caido24h.toFixed(1)} mm pasados en las últimas 24 h y se prevén ${balance.prevista48h.toFixed(1)} mm para las próximas 48 h${pico && pico.milimetros > 0 ? `, con un pico de ${pico.milimetros} mm en 2 h` : ""}.`);
   }
   if (anegamientos) {
     const top = anegamientos.porDistrito[0];
-    frases.push(`La adaptación exploratoria del modelo mensual muestra ${anegamientos.esperadosCiudad.toFixed(1)} casos ilustrativos para ${anegamientos.ventanaDias} días${top ? `, con mayor participación histórica en ${titulo(top.distrito)}` : ""}; no tiene validación diaria/semanal.`);
+    frases.push(`El escenario orientativo del modelo mensual muestra ${anegamientos.esperadosCiudad.toFixed(1)} casos para ${anegamientos.ventanaDias} días${top ? `, con mayor participación histórica en ${titulo(top.distrito)}` : ""}.`);
   }
   frases.push(!reportes ? "No se pudieron consultar los reportes de vecinos." : reportes.activos === 0 ? "No hay aportes registrados en las últimas 24 h; esto no descarta agua en la zona." : `Hay ${reportes.activos} aporte${reportes.activos === 1 ? " vecinal" : "s vecinales"} sin verificar en las últimas 24 h, ${reportes.ultimas6h} en las últimas 6 h.`);
   const caidas = [...new Set([...estado.fallas, ...kpis.fallas].map((falla) => falla.fuente))];

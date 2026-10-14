@@ -137,7 +137,7 @@ export function validateReport(input: NewReportInput): Pick<Report, "lat" | "lon
   }
   const lat = toCoordinate(input.lat, BOUNDS.south, BOUNDS.north, "La latitud");
   const lon = toCoordinate(input.lon, BOUNDS.west, BOUNDS.east, "La longitud");
-  if (!featureAt(city, lat, lon)) throw new ReportError("El punto está fuera del área de Rosario cubierta por esta demo.");
+  if (!featureAt(city, lat, lon)) throw new ReportError("El punto está fuera del área de Rosario cubierta por Cota.");
   return {
     lat,
     lon,

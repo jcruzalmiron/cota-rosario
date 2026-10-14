@@ -50,7 +50,7 @@ export function LookupResult({ hallazgo, terrain }: LookupResultProps) {
       {hallazgo.clima ? (
         <p className="leading-relaxed text-ink">
           Riesgo por lluvias torrenciales <span className={`${CLIMA_TEXT[hallazgo.clima]} readout`}>{hallazgo.clima}</span>
-          <span className="text-ink-soft"> según la capa municipal de riesgo climático 2024, rasterizada para esta demo.</span>
+          <span className="text-ink-soft"> según el mapa municipal de riesgo climático de 2024.</span>
         </p>
       ) : null}
 

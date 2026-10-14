@@ -22,7 +22,7 @@ const CONSEJOS: Record<string, string[]> = {
   ],
   atencion: [
     "Sacá el auto de la vereda si vivís sobre una zona marcada.",
-    "Despejá rejillas y desagües de tu frente: ahí empieza la mayoría de los anegamientos de macrocentro.",
+    "Revisá que las rejillas y los desagües de tu frente estén despejados.",
     "Evitá programar viajes por las avenidas que cruzan el Ludueña o el Saladillo en las próximas horas.",
   ],
   alerta: [
@@ -46,7 +46,7 @@ export default async function VecinosPage() {
     ? "Faltan datos para una evaluación completa"
     : riesgo.nivel === "normal"
       ? "Sin señales elevadas en los datos consultados"
-      : `Señal ${riskLabel(riesgo.nivel).toLowerCase()} en esta demo`;
+      : `Nivel ${riskLabel(riesgo.nivel).toLowerCase()} en los datos consultados`;
 
   return (
     <AppShell
@@ -128,7 +128,7 @@ export default async function VecinosPage() {
               </p>
             </DocsSection>
             <DocsSection titulo="De dónde sale cada número">
-              <p className="text-xs leading-relaxed text-ink-soft">Esta demo combina lecturas publicadas, pronósticos modelados, capas fijas y cálculos propios. Consultá la fecha y el método de cada fuente; su calidad no está garantizada por el panel.</p>
+              <p className="text-xs leading-relaxed text-ink-soft">Las lecturas publicadas, los pronósticos y los mapas tienen su propia fecha y cobertura. Consultá el origen y el método de cada dato.</p>
               <Provenance
                 sellos={[
                   { id: "ina", consultadoEn: rio?.consultadoEn, falla: fallaDe("ina") },
@@ -142,9 +142,9 @@ export default async function VecinosPage() {
           </Docs>
 
           <p className="hairline px-5 py-6 text-xs leading-relaxed text-ink-faint sm:px-6">
-            Cota no es un servicio oficial de alerta. Ante una emergencia, Defensa Civil 103.{" "}
+            Ante una emergencia, Defensa Civil 103.{" "}
             <Link href={HELP_HREF} className="underline decoration-rule underline-offset-4 hover:text-ink">
-              Cómo funciona todo esto
+              Cómo funciona Cota
             </Link>
             .
           </p>

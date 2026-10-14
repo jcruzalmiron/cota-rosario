@@ -56,16 +56,16 @@ export default async function PrediccionesPage() {
         <div className="flex flex-col">
           <section className="px-5 py-6 sm:px-6">
             <p className="meta">Próximos {ventanaDias} días{fallas.length ? " · evaluación parcial" : ""}</p>
-            <h1 className="mt-2 text-xl font-semibold tracking-tight text-ink">Explorar los próximos siete días</h1>
+            <h1 className="mt-2 text-xl font-semibold tracking-tight text-ink">La semana que viene</h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              Pronóstico de lluvia, tendencias del río y un escenario ilustrativo construido con registros mensuales. La adaptación por día y distrito no tiene validación operativa.
+              Lluvia prevista, tendencias del Paraná y escenarios de anegamiento para consultar los próximos siete días.
             </p>
           </section>
 
           <DataStatus estado={estado} />
 
           <section className="hairline px-5 py-6 sm:px-6">
-            <h2 className="meta">Escenario ilustrativo de anegamientos</h2>
+            <h2 className="meta">Escenario de anegamientos</h2>
             <div className="mt-4">{anegamientos ? <FloodingOutlook anegamientos={anegamientos} /> : <SourceDown falla={fallaDe("modelos") ?? fallaDe("openMeteo")} />}</div>
           </section>
 
@@ -119,7 +119,7 @@ export default async function PrediccionesPage() {
             </div>
           </section>
 
-          <Docs titulo="Documentación: cómo se calcula y vigencia de los datos">
+          <Docs titulo="Fuentes, metodología y fecha de los datos">
             <DocsSection titulo="Cómo se calculan las tres estimaciones">
               <ModelNotes predicciones={predicciones} />
             </DocsSection>
@@ -127,7 +127,7 @@ export default async function PrediccionesPage() {
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Pronóstico y caudal</dt>
-                  <dd className="text-ink">fuentes reales compartidas hasta 60 s; controles de cobertura</dd>
+                  <dd className="text-ink">datos de la consulta actual</dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Última lectura del río</dt>
@@ -137,7 +137,7 @@ export default async function PrediccionesPage() {
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Registro de Defensa Civil incorporado hasta</dt>
                   <dd className="readout text-ink">{vigencia.defensaCivilHasta}</dd>
-                  <dd className="meta">límite del registro incorporado en esta demo</dd>
+                  <dd className="meta">último mes del registro disponible</dd>
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <dt className="meta">Lluvia histórica hasta</dt>
@@ -170,9 +170,6 @@ export default async function PrediccionesPage() {
             </DocsSection>
           </Docs>
 
-          <p className="hairline px-5 py-6 text-xs leading-relaxed text-ink-faint sm:px-6">
-            Demo con precisión y cobertura sin garantía operativa. Consultar los organismos responsables para información oficial.
-          </p>
         </div>
       }
     />
