@@ -8,8 +8,8 @@ Propuesta para que el voluntariado tecnológico (implementadores de IA formados 
 | P2 · Exportación de resumen | CSV del resumen por período y corte. | Concilia con `IncidentService.summary`. | — |
 | P3 · Transcriptor local | Adaptador `Transcriber` sobre un servicio local (p. ej. faster-whisper). | Segmentos con inicio/fin; falla sin perder el texto. | Política de audio aprobada. |
 | P4 · Extracción con IA | Adaptador `FieldExtractor` que sólo devuelve candidatos con evidencia. | Mismo set de pruebas que las reglas; nunca completa sin fuente. | Proveedor y datos autorizados. |
-| P5 · Métricas O5 | Despacho→arribo, demora de primera novedad, panoramas pendientes, con denominador. | Concilian con eventos de origen. | Definiciones de guardia. |
-| P6 · QR de portón (O4) | Registro manual y QR autenticado de entrada/salida. | Doble escaneo conciliado; cámara fuera de servicio no bloquea. | Inventario de móviles. |
+| P5 · Métricas O5 | Base implementada. Pendiente: umbrales configurables desde la UI y comparación entre períodos. | Concilian con eventos de origen. | Definiciones de guardia. |
+| P6 · Portón O4 | Base implementada. Pendiente: alta y baja de móviles desde la UI y reporte de movimientos a revisar. | Doble escaneo conciliado; cámara fuera de servicio no bloquea. | Inventario real de móviles. |
 | P7 · Recordatorio por canal interno | Envío del recordatorio CRM al canal que defina administración. | Un aviso por tarea y vencimiento; el tablero sigue siendo respaldo. | Canal aprobado. |
 
 Reglas para cada aporte: rama propia, pruebas nuevas en `tests/`, `npm test`, `npm run typecheck` y `npm run build` en verde, sin datos reales ni secretos en el repo.

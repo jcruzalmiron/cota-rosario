@@ -48,4 +48,4 @@ Corte: 4 de noviembre de 2026. Escala: pendiente · implementado localmente · v
 3. **Jefatura / responsable de informes:** plantilla vigente para Fiscalía, informe aceptado y bitácora cerrada (anonimizados), campos obligatorios, variantes, formato de entrega y revisor.
 4. **Operaciones:** tiempos despacho→arribo por zona para validar ETA.
 5. **Administración:** planilla de seguimiento de empresas, datos confirmados de la fiesta (fecha, capacidad, estado de la venta) y reglas de reserva.
-6. **Fundación / voluntariado:** responsable de revisión por componente y criterio para asignar paquetes a implementadores (ver `docs/paquetes-voluntariado.md`).
+6. **Fundación / voluntariado:** responsable de revisión por componente y criterio para asignar paquetes a implementadores (ver `docs/paquetes-voluntariado.md` y la propuesta en `docs/propuesta-voluntariado-ia.md`).
