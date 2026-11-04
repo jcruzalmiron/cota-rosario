@@ -15,7 +15,7 @@ Corte: 4 de noviembre de 2026. Escala: pendiente · implementado localmente · v
 
 | Frente | Estado | Qué hay | Qué falta para avanzar |
 |---|---|---|---|
-| O1 mínimo · Bandeja y resúmenes | Implementado localmente | Alta que siempre guarda borrador, transiciones del §2.4 con versión y motivo, aislamiento por cuartel, resumen al corte desde el historial. | Vista de bandeja con filtros en UI y exportación del resumen. Respaldo/restauración probado con Postgres. |
+| O1 · Bandeja y resúmenes | Implementado localmente | Alta que siempre guarda borrador, transiciones del §2.4 con versión (motivo al cerrar, reabrir o devolver a revisión), aislamiento por cuartel. Pantalla `/bandeja`: filtros por estado/abiertos, tipo, prioridad y sin ubicación; paginación; detalle con contacto e historial; aviso de conflicto entre operadores. Resumen por período y corte con reabiertos, pendientes sin ubicación, antigüedad y tipos; descarga CSV sin datos personales. | SLA acordado para calcular vencidos. Resumen programado y su destino (requiere canal autorizado). Respaldo/restauración probado con Postgres. |
 | O2 · Ingreso bloqueante y despacho | Implementado localmente | Denunciante, teléfono y lugar se validan en servidor al despachar, con faltantes por campo. Excepción de jefatura auditada que deja el completado pendiente. Despacho idempotente. Referencia manual a Bravo/Brau. | Recorrido con radiooperador: paso exacto que bloquea, excepciones reales y tratamiento de urgencias con datos incompletos **antes de activar el bloqueo en guardia**. |
 | O3 · Novedades, panorama y aviso a 10 min | Implementado localmente | Novedad, arribo, panorama, retorno. Arribo sin panorama queda pendiente. Aviso a los 10 min del despacho por job durable, sin duplicados, con relectura antes de emitir, acuse separado de la novedad y recuperación tras caída del worker. ETA se muestra como "sin base validada". | Jefes de guardia: qué reinicia el reloj, si se repite el aviso (`ALERTA_SEGUIMIENTO_MIN`, hoy apagado), a quién se escala. Registros reales para contrastar los 18–20 min de zona sur. |
 | B1 · Bitácora por texto | Implementado localmente | Relato o transcripción → eventos candidatos con evidencia (fragmento o tramo de audio). Revisión de jefatura con versión. Cronología con pendientes. Exportación provisional JSON/CSV. | Revisión de la base de Juan. Transcriptor (interfaz lista, adaptador apagado). Bitácora cerrada anonimizada para medir tiempo y completitud. |
@@ -25,7 +25,7 @@ Corte: 4 de noviembre de 2026. Escala: pendiente · implementado localmente · v
 
 ## Verificación ejecutada
 
-- `npm test`: 31/31 (PGlite = Postgres en WASM, reloj controlado).
+- `npm test`: 35/35 (PGlite = Postgres en WASM, reloj controlado).
 - `npm run typecheck` y `npm run build`: sin errores ni advertencias.
 - Recorrido manual en navegador (modo local, datos ficticios): llamada incompleta → despacho rechazado con faltantes → datos completos → despacho → móvil en mesa de radio. Relato libre → borrador con horas, lugar y móviles → preguntas de faltantes. CRM rechazado para el rol operador.
 - No verificado: Docker Compose (Docker Desktop apagado en este equipo) y worker separado contra Postgres real.

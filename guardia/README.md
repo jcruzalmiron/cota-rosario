@@ -15,7 +15,7 @@ cp .env.example .env.local   # deja AUTH_MODE=dev-local
 npm run dev                  # http://localhost:3300
 ```
 
-La base es Postgres en WASM (PGlite) dentro de `.data/`. El worker corre dentro del proceso web. El selector de usuario arriba a la derecha cambia de rol (operador, jefe de guardia, revisor, administración). Todos son usuarios ficticios.
+La base es Postgres en WASM (PGlite) dentro de `.data/`. El worker corre dentro del proceso web. En desarrollo, si cambiás código de `src/domain/` reiniciá `npm run dev`: los servicios quedan en memoria entre recargas. El selector de usuario arriba a la derecha cambia de rol (operador, jefe de guardia, revisor, administración). Todos son usuarios ficticios.
 
 ## Arranque con Postgres (Docker)
 
@@ -28,7 +28,7 @@ Levanta `db` (Postgres 17), `web` y `worker` como procesos separados. Migracione
 ## Pruebas
 
 ```bash
-npm test          # 31 pruebas: dominio + Postgres (PGlite) con reloj controlado
+npm test          # pruebas: dominio + Postgres (PGlite) con reloj controlado
 npm run typecheck
 npm run build
 ```
@@ -40,7 +40,7 @@ npm run build
 | `migrations/` | SQL versionado (Postgres). |
 | `src/domain/` | Reglas y servicios: `intake` (O2), `incidents` (O1), `guard` (O2/O3), `jobs` (cola durable), `logbook` (B1), `report-template` y `reports` (B3), `crm` (A1). |
 | `src/server/` | Configuración, identidad y contexto de servicios. |
-| `src/app/` | Pantallas (`/guardia`, `/informes`, `/crm`) y API (`/api/...`). |
+| `src/app/` | Pantallas (`/guardia`, `/bandeja`, `/informes`, `/crm`) y API (`/api/...`). |
 | `src/worker/` | Worker separado para Postgres. |
 | `tests/` | Pruebas de unidad e integración local. |
 | `docs/estado-frentes.md` | Estado por frente, decisiones y pedidos de insumos. |

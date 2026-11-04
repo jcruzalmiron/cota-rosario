@@ -23,6 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <span className="brand">Guardia</span>
           <nav>
             <Link href="/guardia">Mesa de radio</Link>
+            <Link href="/bandeja">Bandeja</Link>
             <Link href="/informes">Bitácora e informes</Link>
             <Link href="/crm">CRM</Link>
           </nav>

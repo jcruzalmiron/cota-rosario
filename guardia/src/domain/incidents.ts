@@ -21,6 +21,11 @@ const TRANSITIONS: Record<IncidentStatus, IncidentStatus[]> = {
   cerrado: ["en_revision"],
 };
 
+/** Tomar un caso nuevo no pide motivo; cerrar, reabrir o devolver a revisión sí. */
+export function requiresReason(from: IncidentStatus, to: IncidentStatus): boolean {
+  return to === "cerrado" || (to === "en_revision" && from !== "nuevo");
+}
+
 export function canTransition(from: IncidentStatus, to: IncidentStatus): boolean {
   return TRANSITIONS[from].includes(to);
 }
@@ -171,15 +176,15 @@ export class IncidentService {
 
   async transition(actor: Actor, id: string, expectedVersion: number, to: IncidentStatus, opts: { reason?: string; assignedTo?: string; duplicateOf?: string } = {}) {
     requireRole(actor, "operador", "jefe_guardia");
-    if ((to === "cerrado" || to === "en_revision") && !opts.reason?.trim()) {
-      throw new ValidationError("Cerrar o reabrir requiere motivo.");
-    }
     const now = this.clock.now();
     return this.db.tx(async (q) => {
       const current = await lockIncident(q, id, actor);
       assertVersion(current, expectedVersion);
       if (!canTransition(current.status, to)) {
         throw new ValidationError(`Transición no permitida: ${current.status} → ${to}`);
+      }
+      if (requiresReason(current.status, to) && !opts.reason?.trim()) {
+        throw new ValidationError("Cerrar, reabrir o volver a revisión requiere motivo.");
       }
       if (current.status === "cerrado" && to === "en_revision") requireRole(actor, "jefe_guardia");
       const version = current.version + 1;
@@ -194,14 +199,41 @@ export class IncidentService {
     });
   }
 
-  async list(actor: Actor, filter: { status?: IncidentStatus; limit?: number; offset?: number } = {}) {
+  /**
+   * Bandeja: filtros por estado (o "abiertos"), categoría, prioridad, rango de alta
+   * y casos sin ubicación utilizable. Orden: prioridad confirmada y antigüedad.
+   * No incluye datos del denunciante.
+   */
+  async list(actor: Actor, filter: IncidentFilter = {}) {
     requireRole(actor, "operador", "jefe_guardia");
-    const { rows } = await this.db.query<IncidentRow>(
-      `SELECT * FROM incident WHERE organization_id=$1 AND ($2::text IS NULL OR status=$2)
-       ORDER BY COALESCE(priority_confirmed, 9), created_at LIMIT $3 OFFSET $4`,
-      [actor.organizationId, filter.status ?? null, Math.min(filter.limit ?? 50, 200), filter.offset ?? 0],
-    );
-    return rows;
+    const limit = Math.min(Math.max(filter.limit ?? 50, 1), 200);
+    const offset = Math.max(filter.offset ?? 0, 0);
+    const params = [
+      actor.organizationId,
+      filter.status === "abiertos" ? null : filter.status ?? null,
+      filter.status === "abiertos",
+      filter.category ?? null,
+      filter.priority ?? null,
+      filter.from ?? null,
+      filter.to ?? null,
+      !!filter.withoutLocation,
+    ];
+    const where = `organization_id=$1
+      AND ($2::text IS NULL OR status=$2)
+      AND (NOT $3::boolean OR status <> 'cerrado')
+      AND ($4::text IS NULL OR category=$4)
+      AND ($5::smallint IS NULL OR priority_confirmed=$5)
+      AND ($6::timestamptz IS NULL OR created_at >= $6)
+      AND ($7::timestamptz IS NULL OR created_at <= $7)
+      AND (NOT $8::boolean OR location_precision IS NULL)`;
+    const items = (await this.db.query<IncidentRow & { reopened: boolean }>(
+      `SELECT i.*, EXISTS (SELECT 1 FROM incident_event e WHERE e.incident_id=i.id AND e.from_status='cerrado') AS reopened
+       FROM incident i WHERE ${where}
+       ORDER BY COALESCE(priority_confirmed, 9), created_at LIMIT ${limit} OFFSET ${offset}`,
+      params,
+    )).rows;
+    const total = Number((await this.db.query<{ n: string }>(`SELECT count(*) AS n FROM incident WHERE ${where}`, params)).rows[0].n);
+    return { items, total, limit, offset };
   }
 
   async get(actor: Actor, id: string) {
@@ -234,8 +266,67 @@ export class IncidentService {
       [actor.organizationId, from, to],
     );
     const r = rows[0];
-    return { from, to, received: Number(r.received), closed: Number(r.closed), pendingAtCut: Number(r.pending_at_cut) };
+    const extra = (await this.db.query<{ reopened: string; without_location: string; oldest_pending_min: string | null }>(
+      `WITH status_at_cut AS (
+         SELECT DISTINCT ON (e.incident_id) e.incident_id, e.to_status
+         FROM incident_event e JOIN incident i ON i.id = e.incident_id
+         WHERE i.organization_id = $1 AND e.at <= $3 AND e.to_status IS NOT NULL
+         ORDER BY e.incident_id, e.id DESC)
+       SELECT
+         (SELECT count(*) FROM incident_event e JOIN incident i ON i.id=e.incident_id
+            WHERE i.organization_id=$1 AND e.from_status='cerrado' AND e.at >= $2 AND e.at <= $3) AS reopened,
+         (SELECT count(*) FROM status_at_cut s JOIN incident i ON i.id=s.incident_id
+            WHERE s.to_status <> 'cerrado' AND i.location_precision IS NULL) AS without_location,
+         (SELECT floor(extract(epoch FROM ($3::timestamptz - min(i.created_at))) / 60)
+            FROM status_at_cut s JOIN incident i ON i.id=s.incident_id WHERE s.to_status <> 'cerrado') AS oldest_pending_min`,
+      [actor.organizationId, from, to],
+    )).rows[0];
+    const byCategory = (await this.db.query<{ category: string | null; n: string }>(
+      `SELECT category, count(*) AS n FROM incident WHERE organization_id=$1 AND created_at >= $2 AND created_at <= $3
+       GROUP BY category ORDER BY count(*) DESC, category`,
+      [actor.organizationId, from, to],
+    )).rows.map((x) => ({ category: x.category ?? "sin_categoria", received: Number(x.n) }));
+    return {
+      from, to,
+      received: Number(r.received),
+      closed: Number(r.closed),
+      reopened: Number(extra.reopened),
+      pendingAtCut: Number(r.pending_at_cut),
+      pendingWithoutLocation: Number(extra.without_location),
+      oldestPendingMin: extra.oldest_pending_min == null ? null : Number(extra.oldest_pending_min),
+      byCategory,
+    };
   }
+}
+
+export interface IncidentFilter {
+  status?: IncidentStatus | "abiertos";
+  category?: string;
+  priority?: number;
+  from?: Date;
+  to?: Date;
+  withoutLocation?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export type IncidentSummary = Awaited<ReturnType<IncidentService["summary"]>>;
+
+/** CSV del resumen para administración y jefatura (sin datos personales). */
+export function summaryToCsv(s: IncidentSummary): string {
+  const rows: [string, string | number][] = [
+    ["desde", s.from.toISOString()],
+    ["hasta (corte)", s.to.toISOString()],
+    ["recibidos", s.received],
+    ["cerrados en el período", s.closed],
+    ["reabiertos en el período", s.reopened],
+    ["pendientes al corte", s.pendingAtCut],
+    ["pendientes sin ubicación", s.pendingWithoutLocation],
+    ["antigüedad del pendiente más viejo (min)", s.oldestPendingMin ?? ""],
+    ...s.byCategory.map((c): [string, number] => [`recibidos · ${c.category}`, c.received]),
+  ];
+  const esc = (v: string | number) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
+  return ["indicador,valor", ...rows.map(([k, v]) => `${esc(k)},${esc(v)}`)].join("\n");
 }
 
 export async function lockIncident(q: Queryable, id: string, actor: Actor): Promise<IncidentRow> {

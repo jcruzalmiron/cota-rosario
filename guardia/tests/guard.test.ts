@@ -62,7 +62,7 @@ test("O1: otro cuartel no ve el detalle", async () => {
   const { incidents } = await ctx();
   const { incident } = await incidents.create(operador, ingresoCompleto);
   await assert.rejects(incidents.get(operadorOtroCuartel, incident.id), ForbiddenError);
-  assert.equal((await incidents.list(operadorOtroCuartel)).length, 0);
+  assert.equal((await incidents.list(operadorOtroCuartel)).total, 0);
 });
 
 test("O1: cierre y reapertura cuentan correctamente a distintas fechas de corte", async () => {
