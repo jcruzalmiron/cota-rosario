@@ -119,7 +119,7 @@ export default function PortonPage() {
   return (
     <div className="grid2">
       <section className="card">
-        <h1>Portón</h1>
+        <h1>Registrar paso</h1>
         <div className="field">
           <label htmlFor="gate">Portón</label>
           <select id="gate" value={gateId} onChange={(e) => setGateId(e.target.value)}>

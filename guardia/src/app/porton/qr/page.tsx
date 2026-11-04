@@ -16,7 +16,7 @@ export default function QrPrintPage() {
   return (
     <section className="card">
       <div className="summary-head">
-        <h1>QR de los móviles</h1>
+        <h1>Códigos</h1>
         <button className="noprint" onClick={() => window.print()} disabled={!codes?.length}>Imprimir</button>
       </div>
       <p className="hint noprint">Pegá cada código en su móvil, en un lugar que el lector alcance desde el portón. Si se pierde o se copia, cambiá QR_SECRET y reimprimí todos.</p>

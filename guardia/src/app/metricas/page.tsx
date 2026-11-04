@@ -41,7 +41,7 @@ export default function MetricasPage() {
   return (
     <section className="card">
       <div className="summary-head">
-        <h1>Métricas de guardia</h1>
+        <h1>Indicadores</h1>
         <div className="field">
           <label htmlFor="period">Período</label>
           <select id="period" value={hours} onChange={(e) => setHours(Number(e.target.value))}>

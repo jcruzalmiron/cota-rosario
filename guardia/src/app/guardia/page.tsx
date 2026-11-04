@@ -16,9 +16,9 @@ const CATEGORIES = ["incendio_estructural", "incendio_vehicular", "incendio_past
 
 export default function GuardiaPage() {
   return (
-    <div className="grid2">
-      <IntakePanel />
+    <div className="grid2 lead-first">
       <RadioBoard />
+      <IntakePanel />
     </div>
   );
 }
@@ -196,7 +196,7 @@ function RadioBoard() {
 
   return (
     <section className="card">
-      <h1>Mesa de radio</h1>
+      <h1>Móviles en servicio</h1>
       {error && <p className="err">{error}</p>}
       {loaded && !items.length && !error && <p className="hint">No hay móviles en servicio.</p>}
       <ul className="board">

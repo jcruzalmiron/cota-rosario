@@ -104,7 +104,7 @@ export default function BandejaPage() {
     <>
       <div className="grid2">
         <section className="card">
-          <h1>Bandeja de incidentes</h1>
+          <h1>Casos</h1>
           <div className="row filters">
             <div className="field">
               <label htmlFor="f-estado">Estado</label>
