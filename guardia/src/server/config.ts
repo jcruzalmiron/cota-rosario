@@ -6,6 +6,7 @@ import { DEFAULT_ALERT_RULE, type AlertRule } from "../domain/guard";
  */
 export interface Config {
   alertRule: AlertRule;
+  qrSecret: string;
   adapters: Record<string, { enabled: boolean; missing: string[] }>;
 }
 
@@ -34,5 +35,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     }
     adapters[name] = { enabled, missing };
   }
-  return { alertRule, adapters };
+  // QR firmados del portón: secreto obligatorio fuera de desarrollo local.
+  const devLocal = env.AUTH_MODE === "dev-local" && env.NODE_ENV !== "production";
+  const qrSecret = env.QR_SECRET || (devLocal ? "solo-desarrollo-local" : "");
+  if (!qrSecret) throw new Error("QR_SECRET es obligatorio fuera del modo local.");
+  return { alertRule, qrSecret, adapters };
 }

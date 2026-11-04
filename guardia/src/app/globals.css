@@ -106,3 +106,23 @@ button.csv { margin-bottom: .8rem; }
 .stats.six { grid-template-columns: repeat(6, 1fr); }
 @media (max-width: 900px) { .stats.six { grid-template-columns: repeat(2, 1fr); } }
 label.inline { display: flex; gap: .4rem; align-items: center; font-size: .9rem; }
+
+/* Portón, QR y métricas */
+.scanner { width: 100%; max-height: 50vh; border-radius: 6px; background: #000; margin-top: .5rem; }
+.board li.muted { opacity: .6; }
+.linkbtn { display: inline-flex; align-items: center; min-height: 2.6rem; padding: .45rem .95rem; color: var(--focus); font-weight: 600; }
+.qrgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.qrgrid figure { margin: 0; border: 1px dashed var(--line); padding: .75rem; text-align: center; break-inside: avoid; }
+.qrgrid .qr svg { width: 100%; height: auto; }
+.qrgrid figcaption { display: flex; flex-direction: column; font-size: .9rem; }
+.qrgrid figcaption strong { font-size: 1.3rem; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .9rem; }
+.metric { border: 1px solid var(--line); border-radius: 6px; padding: .8rem .9rem; }
+.metric h2 { margin: 0 0 .4rem; }
+.metric .big { font-size: 1.6rem; font-weight: 800; margin: .2rem 0; }
+.metric .meta { margin: .15rem 0; }
+@media print {
+  .top, .devbar, .noprint { display: none !important; }
+  main { padding: 0; max-width: none; }
+  .card { border: 0; }
+}

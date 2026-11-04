@@ -22,6 +22,7 @@ services:
     environment:
       DATABASE_URL: postgres://guardia:${POSTGRES_PASSWORD:-solo-local}@db:5432/guardia
       AUTH_MODE: dev-local
+      QR_SECRET: ${QR_SECRET:-solo-local-compose}
     volumes:
       - .:/app
       - web_node_modules:/app/node_modules
@@ -36,6 +37,7 @@ services:
     command: sh -c "npm ci && npm run worker"
     environment:
       DATABASE_URL: postgres://guardia:${POSTGRES_PASSWORD:-solo-local}@db:5432/guardia
+      QR_SECRET: ${QR_SECRET:-solo-local-compose}
     volumes:
       - .:/app
       - worker_node_modules:/app/node_modules

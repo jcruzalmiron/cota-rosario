@@ -24,6 +24,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <nav>
             <Link href="/guardia">Mesa de radio</Link>
             <Link href="/bandeja">Bandeja</Link>
+            <Link href="/porton">Portón</Link>
+            <Link href="/metricas">Métricas</Link>
             <Link href="/informes">Bitácora e informes</Link>
             <Link href="/crm">CRM</Link>
           </nav>

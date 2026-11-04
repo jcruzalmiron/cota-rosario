@@ -38,9 +38,9 @@ npm run build
 | Ruta | Contenido |
 |---|---|
 | `migrations/` | SQL versionado (Postgres). |
-| `src/domain/` | Reglas y servicios: `intake` (O2), `incidents` (O1), `guard` (O2/O3), `jobs` (cola durable), `logbook` (B1), `report-template` y `reports` (B3), `crm` (A1). |
+| `src/domain/` | Reglas y servicios: `intake` (O2), `incidents` (O1), `guard` (O2/O3), `jobs` (cola durable), `logbook` (B1), `report-template` y `reports` (B3), `crm` (A1), `gate` (O4), `metrics` (O5). |
 | `src/server/` | Configuración, identidad y contexto de servicios. |
-| `src/app/` | Pantallas (`/guardia`, `/bandeja`, `/informes`, `/crm`) y API (`/api/...`). |
+| `src/app/` | Pantallas (`/guardia`, `/bandeja`, `/porton`, `/metricas`, `/informes`, `/crm`) y API (`/api/...`). |
 | `src/worker/` | Worker separado para Postgres. |
 | `tests/` | Pruebas de unidad e integración local. |
 | `docs/estado-frentes.md` | Estado por frente, decisiones y pedidos de insumos. |
@@ -51,3 +51,4 @@ npm run build
 - Contacto del denunciante en tabla aparte (`incident_contact`); los listados no lo exponen.
 - CRM con rol propio: no ve incidentes, bitácoras ni informes.
 - Informes: quien redacta no puede aprobar; con plantilla provisoria sólo se emiten borradores.
+- Portón: los QR sólo identifican el móvil y van firmados con `QR_SECRET` (obligatorio fuera del modo local). Si un código se copia, cambiar el secreto y reimprimir.
