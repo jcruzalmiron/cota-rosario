@@ -14,6 +14,7 @@ import { riskColor } from "@/components/status";
 import { DataStatus } from "@/components/DataStatus";
 import { loadStatus } from "@/lib/status";
 import { riskLabel } from "@/lib/risk";
+import { sourceSignals } from "@/lib/placeSignals";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export default async function ResidentsPage() {
 
   return (
     <Workspace
-    canvas={<FloodMap zones={risk.zones} searcher reports report />}
+    canvas={<FloodMap zones={risk.zones} signals={sourceSignals(risk, river, rain)} searcher reports report />}
     rail={
       <div className="flex flex-col">
         <WeatherLine weather={weather} />

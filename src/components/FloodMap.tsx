@@ -4,6 +4,8 @@ import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { LookupResult } from "@/components/LookupResult";
+import { SourceSignals } from "@/components/SourceSignals";
+import type { SourceSignal } from "@/lib/placeSignals";
 import { AddressSearch } from "@/components/AddressSearch";
 import { MapLegend, type LegendOverlay } from "@/components/MapLegend";
 import { MobileReportPanel, ReportFab } from "@/components/reports/MobileReports";
@@ -48,6 +50,8 @@ interface FloodMapProps {
   reports?: boolean;
   report?: boolean;
   corner?: ReactNode;
+  /** Señales por fuente para la ficha del lugar buscado. */
+  signals?: SourceSignal[];
 }
 
 const CLIMATE_SWATCHES = [
@@ -69,7 +73,7 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   }
 }
 
-export function FloodMap({ zones, searcher = false, reports = false, report = false, corner }: FloodMapProps) {
+export function FloodMap({ zones, searcher = false, reports = false, report = false, corner, signals }: FloodMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const zonesLayerRef = useRef<import("leaflet").GeoJSON | null>(null);
@@ -343,6 +347,7 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
                 </button>
               </form>
               {finding ? <LookupResult finding={finding} terrain={terrain} /> : null}
+              {finding && signals ? <SourceSignals signals={signals} finding={finding} simulated={Boolean(scenario)} /> : null}
               {finding && searchedPoint && reports ? <NearbyReports point={searchedPoint} reports={reportsState.reports} available={reportsState.available} canReport={report} /> : null}
               {error ? <p className="border-t border-rule px-4 py-3 text-sm text-alert">{error}</p> : null}
             </div>

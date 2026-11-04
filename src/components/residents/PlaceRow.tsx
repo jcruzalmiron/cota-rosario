@@ -1,4 +1,6 @@
 import { PlaceFactsGrid } from "@/components/residents/PlaceFactsGrid";
+import { SourceSignals } from "@/components/SourceSignals";
+import type { SourceSignal } from "@/lib/placeSignals";
 import type { ReadingState } from "@/components/residents/usePlaceReadings";
 import { riskColor } from "@/components/status";
 import { CLIMATE_CATEGORY_LABEL, type Finding, type TerrainMeta } from "@/lib/lookup";
@@ -47,12 +49,13 @@ interface PlaceRowProps {
   state: ReadingState;
   finding: Finding | null;
   terrain: TerrainMeta | null;
+  signals?: SourceSignal[];
   selected: boolean;
   onSelect: () => void;
   onRemove: () => void;
 }
 
-export function PlaceRow({ place, state, finding, terrain, selected, onSelect, onRemove }: PlaceRowProps) {
+export function PlaceRow({ place, state, finding, terrain, signals, selected, onSelect, onRemove }: PlaceRowProps) {
   const color = placeColor(finding);
   const location = [finding?.neighbourhood ? titleCase(finding.neighbourhood) : null, finding?.district ? `distrito ${titleCase(finding.district.district)}` : null].filter(Boolean).join(" · ");
   return (
@@ -71,6 +74,7 @@ export function PlaceRow({ place, state, finding, terrain, selected, onSelect, o
       {selected ? (
         <div className="flex flex-col gap-3 px-4 pb-4">
           {finding ? <PlaceFactsGrid finding={finding} terrain={terrain} /> : null}
+          {finding && signals ? <SourceSignals signals={signals} finding={finding} simulated={false} className="rounded-lg border border-rule-soft px-3 py-3" /> : null}
           <button type="button" onClick={onRemove} className="self-end rounded-md px-2 py-1 text-xs text-ink-faint underline decoration-rule underline-offset-4 hover:text-ink">
             Quitar {place.name}
           </button>

@@ -12,10 +12,12 @@ import type { AddressSuggestion } from "@/lib/addressSuggestions";
 import type { TerrainMeta } from "@/lib/lookup";
 import { createPlaceReader, geocode, type PlaceReader } from "@/lib/placeReader";
 import { ADD_ERROR, MAX_PLACES, addPlace, removePlace, type Place } from "@/lib/places";
+import type { SourceSignal } from "@/lib/placeSignals";
 import { zoneReading, type ZoneView } from "@/lib/risk";
 
 interface PlacesBoardProps {
   zones: ZoneView[];
+  signals?: SourceSignal[];
 }
 
 const GEOLOCATION_TIMEOUT_MS = 10_000;
@@ -25,7 +27,7 @@ function newId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-export function PlacesBoard({ zones }: PlacesBoardProps) {
+export function PlacesBoard({ zones, signals }: PlacesBoardProps) {
   const { places, available, ready, save } = usePlaces();
   const [reader] = useState<PlaceReader>(createPlaceReader);
   const [terrain, setTerrain] = useState<TerrainMeta | null>(null);
@@ -157,6 +159,7 @@ export function PlacesBoard({ zones }: PlacesBoardProps) {
                 state={state}
                 finding={finding}
                 terrain={terrain}
+                signals={signals}
                 selected={place.id === selectedId}
                 onSelect={() => setSelectedId((current) => (current === place.id ? null : place.id))}
                 onRemove={() => {
