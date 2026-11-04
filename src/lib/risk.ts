@@ -162,7 +162,7 @@ export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | nul
   const falls = factors.filter((factor) => !factor.available).map((factor) => factor.title.toLowerCase());
 
   const baseReason =
-    known === "normal"
+    known === "normal" && !incomplete
       ? "El río y la lluvia están por debajo de los umbrales de referencia. Consultá también las condiciones de tu zona."
       : `${dominant?.title}: ${dominant?.detail}`;
 

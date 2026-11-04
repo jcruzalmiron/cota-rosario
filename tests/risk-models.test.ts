@@ -14,8 +14,12 @@ test("total and partial absence are never shown as normal", () => {
   assert.equal(empty.level, null);
   assert.equal(empty.noData, true);
   assert.ok(empty.zones.every((z) => z.level === null));
-  assert.equal(assessRisk(river(), null).level, null);
-  assert.equal(assessRisk(null, rain()).level, null);
+  const riverOnly = assessRisk(river(), null);
+  assert.equal(riverOnly.level, null);
+  assert.match(riverOnly.reason, /sin lluvia concentrada\. Altura del Paraná:/);
+  const rainOnly = assessRisk(null, rain());
+  assert.equal(rainOnly.level, null);
+  assert.match(rainOnly.reason, /sin altura del paraná\. Lluvia concentrada:/);
   assert.equal(riskLabel(null), "Evaluación incompleta");
 });
 
