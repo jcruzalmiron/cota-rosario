@@ -1,0 +1,33 @@
+{
+  "name": "guardia-bomberos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backoffice privado de guardia, bitácora, informes y CRM para cuarteles de Bomberos Voluntarios (piloto Rosario).",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3300",
+    "build": "next build",
+    "start": "next start -p 3300",
+    "worker": "tsx src/worker/main.ts",
+    "migrate": "tsx src/db/migrate-cli.ts",
+    "seed:local": "tsx src/db/seed-local.ts",
+    "typecheck": "next typegen && tsc --noEmit -p .",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.15",
+    "next": "^16.4.5",
+    "pg": "^8.23.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/pg": "^8",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  }
+}

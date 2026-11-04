@@ -6,3 +6,5 @@ data
 cloudflared.yml
 *.log
 tsconfig.tsbuildinfo
+# Backoffice privado: paquete aparte, no entra en la imagen pública de Cota
+guardia
