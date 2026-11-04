@@ -5,6 +5,8 @@ import { CLIMATE_CATEGORY_LABEL, type Finding, type TerrainMeta } from "@/lib/lo
 import type { Place } from "@/lib/places";
 import { riskLabel, type RiskLevel } from "@/lib/risk";
 
+export type ZoneOf = (zone: string) => { level: RiskLevel | null; basis: string | undefined };
+
 const OUTSIDE_COLOR = "#74ACDF";
 const LOADING_COLOR = "var(--ink-faint)";
 
@@ -12,12 +14,13 @@ export function titleCase(text: string): string {
   return text.toLowerCase().replace(/(^|\s)\p{L}/gu, (letter) => letter.toUpperCase());
 }
 
-export function findingFor(place: Place, state: ReadingState, zoneLevel: (zone: string) => RiskLevel | null): Finding | null {
+export function findingFor(place: Place, state: ReadingState, zoneOf: ZoneOf): Finding | null {
   if (state.status !== "ready") {
     return null;
   }
   const { reading } = state;
-  return { ...reading, label: place.name, level: reading.zone ? zoneLevel(reading.zone) : undefined };
+  const zone = reading.zone ? zoneOf(reading.zone) : undefined;
+  return { ...reading, label: place.name, level: zone?.level, basis: zone?.basis };
 }
 
 export function placeColor(finding: Finding | null): string {

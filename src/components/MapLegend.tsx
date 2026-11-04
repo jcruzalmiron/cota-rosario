@@ -22,7 +22,7 @@ interface MapLegendProps {
   withReports: boolean;
 }
 
-const SUMMARY = "Clima municipal 2024: capa fija. Contornos: señal orientativa de esta consulta. Gris: evaluación incompleta.";
+const SUMMARY = "Zonas: área inundable oficial, coloreada sólo por el pronóstico regional de lluvia. El Paraná no colorea los arroyos. Gris punteado: sin señal actual.";
 
 function LayersIcon() {
   return (
@@ -55,7 +55,9 @@ function RiskScale({ officialZones }: { officialZones: number }) {
           </div>
         ))}
       </div>
-      <p className="text-[0.6875rem] leading-snug text-ink-faint">Contorno y relleno con el color del nivel de hoy en esa zona.</p>
+      <p className="text-[0.6875rem] leading-snug text-ink-faint">
+        El color es igual para todas las zonas: no es una medición en el barrio. Gris punteado: pronóstico ausente o vencido; la exposición se mantiene.
+      </p>
     </Section>
   );
 }

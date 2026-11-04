@@ -12,10 +12,10 @@ import type { AddressSuggestion } from "@/lib/addressSuggestions";
 import type { TerrainMeta } from "@/lib/lookup";
 import { createPlaceReader, geocode, type PlaceReader } from "@/lib/placeReader";
 import { ADD_ERROR, MAX_PLACES, addPlace, removePlace, type Place } from "@/lib/places";
-import type { RiskLevel } from "@/lib/risk";
+import { zoneReading, type ZoneView } from "@/lib/risk";
 
 interface PlacesBoardProps {
-  zones: { zone: string; level: RiskLevel | null }[];
+  zones: ZoneView[];
 }
 
 const GEOLOCATION_TIMEOUT_MS = 10_000;
@@ -41,7 +41,7 @@ export function PlacesBoard({ zones }: PlacesBoardProps) {
     reader.terrain().then(setTerrain).catch(() => setTerrain(null));
   }, [reader]);
 
-  const zoneLevel = useCallback((zone: string): RiskLevel | null => zones.find((entry) => entry.zone === zone.trim())?.level ?? null, [zones]);
+  const zoneOf = useCallback((zone: string) => zoneReading(zones, zone), [zones]);
 
   const addToPlaces = (place: Place) => {
     const result = addPlace(places, place);
@@ -104,7 +104,7 @@ export function PlacesBoard({ zones }: PlacesBoardProps) {
   };
 
   const full = places.length >= MAX_PLACES;
-  const findings = places.map((place) => ({ place, state: readingOf(place), finding: findingFor(place, readingOf(place), zoneLevel) }));
+  const findings = places.map((place) => ({ place, state: readingOf(place), finding: findingFor(place, readingOf(place), zoneOf) }));
   const selected = places.find((place) => place.id === selectedId) ?? null;
 
   const points: MapPoint[] = findings.map(({ place, finding }) => ({ id: place.id, lat: place.lat, lon: place.lon, color: placeColor(finding), label: place.name, kind: "place", selected: place.id === selectedId }));

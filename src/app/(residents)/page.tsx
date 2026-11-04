@@ -98,8 +98,9 @@ export default async function ResidentsPage() {
               ))}
             </ul>
             <p className="text-xs leading-relaxed text-ink-soft">
-              El nivel general es el peor de los dos factores. Las zonas oficiales del Ludueña y el Saladillo se pintan con ese nivel, ponderado por
-              su sensibilidad a la lluvia concentrada.
+              El nivel general es el peor de los dos factores. Las zonas oficiales del Ludueña y el Saladillo se pintan sólo con el pronóstico
+              regional de lluvia concentrada, igual para todas: la altura del Paraná es el indicador de su estación y no colorea los arroyos. Sin
+              pronóstico vigente, las zonas quedan en gris y conservan su exposición.
             </p>
           </DocsSection>
           <DocsSection title="De dónde sale cada número">

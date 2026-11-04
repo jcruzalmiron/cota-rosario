@@ -16,7 +16,10 @@ const WATCH_MARGIN_METERS = 0.5;
 const RAIN_WATCH_MM = 15;
 const RAIN_ALERT_MM = 25;
 const RAIN_CRITICAL_MM = 30;
-const ZONE_RAIN_SENSITIVITY: Record<string, number> = { A: 1, B: 1, C: 0.9, D: 0.9, "1": 0.8, "2": 0.8, "3": 0.8 };
+/** Códigos de las zonas oficiales de áreas inundables (cuencas del Ludueña y el Saladillo). */
+export const OFFICIAL_ZONES = ["A", "B", "C", "D", "1", "2", "3"] as const;
+/** Igual a FRESHNESS.hourlyRain.staleMs: pasado ese plazo el pronóstico no se usa como señal. */
+export const RAIN_MAX_AGE_MS = 60 * 60 * 1000;
 
 export interface RiskFactor {
   id: "river" | "rain";
@@ -29,11 +32,38 @@ export interface RiskFactor {
   available: boolean;
 }
 
+/**
+ * Estado de la señal usada para una zona. "sin_senales_elevadas" es una lectura
+ * válida bajo umbral; "ausente" y "vencida" significan que no hay lectura.
+ */
+export type SignalStatus = "elevada" | "sin_senales_elevadas" | "ausente" | "vencida";
+
+export interface ZoneSignal {
+  source: "lluvia_pronostico_regional";
+  scope: "regional";
+  status: SignalStatus;
+  level: RiskLevel | null;
+  at: string | null;
+}
+
+/**
+ * Lectura por zona oficial. La exposición es fija (polígono oficial); el color
+ * (`level`) sólo surge de una señal con ámbito aplicable. La altura del Paraná
+ * es el indicador de su estación y no colorea las cuencas de los arroyos.
+ */
+export interface ZoneAssessment {
+  zone: string;
+  level: RiskLevel | null;
+  exposure: "area_inundable_oficial";
+  signal: ZoneSignal;
+  basis: string;
+}
+
 export interface RiskAssessment {
   level: RiskLevel | null;
   reason: string;
   factors: RiskFactor[];
-  zones: { zone: string; level: RiskLevel | null }[];
+  zones: ZoneAssessment[];
   incomplete: boolean;
   noData: boolean;
   assessedAt: string;
@@ -117,7 +147,25 @@ function riverFactor(river: RiverSnapshot | null): RiskFactor {
   };
 }
 
-function rainFactor(rain: RainSnapshot | null): RiskFactor {
+function rainIsStale(rain: RainSnapshot, now: Date | undefined): boolean {
+  if (!now) return false;
+  const fetched = Date.parse(rain.fetchedAt);
+  return !Number.isFinite(fetched) || now.getTime() - fetched > RAIN_MAX_AGE_MS;
+}
+
+function rainFactor(rain: RainSnapshot | null, now?: Date): RiskFactor {
+  if (rain && rainIsStale(rain, now)) {
+    return {
+      id: "rain",
+      level: null,
+      title: "Lluvia concentrada",
+      detail: "El último pronóstico de Open-Meteo está vencido. La lluvia no entra en esta evaluación.",
+      measured: "dato vencido",
+      threshold: "—",
+      official: false,
+      available: false,
+    };
+  }
   if (!rain) {
     return {
       id: "rain",
@@ -151,8 +199,12 @@ function rainFactor(rain: RainSnapshot | null): RiskFactor {
   };
 }
 
-export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | null): RiskAssessment {
-  const factors = [riverFactor(river), rainFactor(rain)];
+/**
+ * `now` habilita el control de vigencia del pronóstico (se pasa en producción).
+ * Sin `now`, no se evalúa vencimiento (pruebas con datos fijos).
+ */
+export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | null, options: { now?: Date } = {}): RiskAssessment {
+  const factors = [riverFactor(river), rainFactor(rain, options.now)];
   const available = factors.filter((factor) => factor.available);
   const noData = available.length === 0;
   const incomplete = available.length < factors.length;
@@ -172,13 +224,55 @@ export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | nul
       ? `Evaluación parcial, sin ${falls.join(" ni ")}. ${baseReason}`
       : baseReason;
 
-  const rainPeak = rain?.peakWindow?.millimeters ?? 0;
-  const zones = Object.entries(ZONE_RAIN_SENSITIVITY).map(([zone, weight]) => {
-    const knownZone = worst([...(factors[1].available ? [rainLevel(rainPeak * weight)] : []), ...(factors[0].level ? [factors[0].level] : [])]);
-    return { zone, level: noData || (incomplete && knownZone === "normal") ? null : knownZone };
-  });
+  const zones = zoneAssessments(factors[1], rain, options.now);
 
-  return { level, reason, factors, zones, incomplete, noData, assessedAt: new Date().toISOString() };
+  return { level, reason, factors, zones, incomplete, noData, assessedAt: (options.now ?? new Date()).toISOString() };
+}
+
+function zoneSignal(rainFactorResult: RiskFactor, rain: RainSnapshot | null, now: Date | undefined): ZoneSignal {
+  const base = { source: "lluvia_pronostico_regional" as const, scope: "regional" as const, at: rain?.fetchedAt ?? null };
+  if (!rainFactorResult.available) {
+    return { ...base, status: rain && rainIsStale(rain, now) ? "vencida" : "ausente", level: null };
+  }
+  const level = rainFactorResult.level!;
+  return { ...base, status: level === "normal" ? "sin_senales_elevadas" : "elevada", level };
+}
+
+const SIGNAL_BASIS: Record<SignalStatus, string> = {
+  elevada: "Área inundable oficial. Color según el pronóstico regional de lluvia concentrada (no es una medición en la zona).",
+  sin_senales_elevadas: "Área inundable oficial. El pronóstico regional de lluvia está por debajo de los umbrales orientativos.",
+  ausente: "Área inundable oficial. Sin señal actual: el pronóstico de lluvia no respondió. La exposición se mantiene.",
+  vencida: "Área inundable oficial. Sin señal actual: el pronóstico de lluvia está vencido. La exposición se mantiene.",
+};
+
+/**
+ * Una sola señal con ámbito aplicable hoy: el pronóstico regional de lluvia, igual
+ * para todas las zonas (sin ponderadores por código no respaldados). Cuando haya
+ * estaciones por cuenca, se suman como señal con su propia cobertura.
+ */
+function zoneAssessments(rainFactorResult: RiskFactor, rain: RainSnapshot | null, now: Date | undefined): ZoneAssessment[] {
+  const signal = zoneSignal(rainFactorResult, rain, now);
+  return OFFICIAL_ZONES.map((zone) => ({
+    zone,
+    level: signal.level,
+    exposure: "area_inundable_oficial",
+    signal,
+    basis: SIGNAL_BASIS[signal.status],
+  }));
+}
+
+/** Vista mínima de zona que consumen mapa y Mi zona (la del escenario no trae `basis`). */
+export interface ZoneView {
+  zone: string;
+  level: RiskLevel | null;
+  basis?: string;
+}
+
+export const SCENARIO_BASIS = "Escenario simulado: no es una lectura actual.";
+
+export function zoneReading(zones: ZoneView[], zone: string, simulated = false): { level: RiskLevel | null; basis: string | undefined } {
+  const entry = zones.find((candidate) => candidate.zone === zone.trim());
+  return { level: entry?.level ?? null, basis: simulated ? SCENARIO_BASIS : entry?.basis };
 }
 
 export interface SimulationInput {
@@ -195,13 +289,11 @@ export interface SimulationResult {
   zones: { zone: string; level: RiskLevel }[];
 }
 
+/** Escenario: misma regla que la evaluación real. El río no colorea las zonas de los arroyos. */
 export function simulate({ meters, alert, evacuation, rainPeakMm }: SimulationInput): SimulationResult {
   const river = riverLevel(meters, alert, evacuation);
   const rain = rainLevel(rainPeakMm);
-  const zones = Object.entries(ZONE_RAIN_SENSITIVITY).map(([zone, weight]) => ({
-    zone,
-    level: worst([rainLevel(rainPeakMm * weight), river]),
-  }));
+  const zones = OFFICIAL_ZONES.map((zone) => ({ zone, level: rain }));
   return { level: worst([river, rain]), river, rain, zones };
 }
 

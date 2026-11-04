@@ -15,7 +15,7 @@ import { RISK_FILL, riskColor } from "@/components/status";
 import type { ClimateMeta, Finding, TerrainMeta } from "@/lib/lookup";
 import { createPlaceReader, geocode, type GeocodedPlace, type PlaceReader } from "@/lib/placeReader";
 import type { AddressSuggestion } from "@/lib/addressSuggestions";
-import { RISK_LABEL, riskLabel, type RiskLevel } from "@/lib/risk";
+import { RISK_LABEL, riskLabel, zoneReading, type RiskLevel, type ZoneView } from "@/lib/risk";
 import { escapeHtml } from "@/lib/html";
 import { loadLeaflet } from "@/lib/leaflet";
 import { RainLayer } from "@/components/rain/RainLayer";
@@ -43,7 +43,7 @@ type FloodZones = FeatureCollection<Polygon | MultiPolygon, Record<string, strin
 type ZoneFeature = Feature<Polygon, { zone: string; sector: string }>;
 
 interface FloodMapProps {
-  zones: { zone: string; level: RiskLevel | null }[];
+  zones: ZoneView[];
   searcher?: boolean;
   reports?: boolean;
   report?: boolean;
@@ -94,14 +94,12 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
   const toggleMobileReports = () => setMobileReportsOpen(!isMobileReportsOpen);
 
   const effectiveZones = scenario?.zones ?? zones;
-  const zoneLevel = useCallback(
-    (zone: string): RiskLevel | null => effectiveZones.find((entry) => entry.zone === zone.trim())?.level ?? null,
-    [effectiveZones],
-  );
-  const levelRef = useRef(zoneLevel);
+  const zoneOf = useCallback((zone: string) => zoneReading(effectiveZones, zone, Boolean(scenario)), [effectiveZones, scenario]);
+  const zoneLevel = useCallback((zone: string): RiskLevel | null => zoneOf(zone).level, [zoneOf]);
+  const zoneRef = useRef(zoneOf);
   useEffect(() => {
-    levelRef.current = zoneLevel;
-  }, [zoneLevel]);
+    zoneRef.current = zoneOf;
+  }, [zoneOf]);
 
   const zoneStyle = useCallback(
     (feature: ZoneFeature | undefined) => {
@@ -154,7 +152,11 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
         style: (feature) => zoneStyleRef.current(feature as ZoneFeature | undefined),
         onEachFeature: (feature, layer) => {
           const properties = (feature as ZoneFeature).properties;
-          layer.bindPopup(() => `Zona ${escapeHtml(properties?.zone ?? "?")} · sector ${escapeHtml(properties?.sector || "—")}<br/>${escapeHtml(riskLabel(levelRef.current(properties?.zone ?? "")))}`);
+          layer.bindPopup(() => {
+            const reading = zoneRef.current(properties?.zone ?? "");
+            const basis = reading.basis ? `<br/><span style="opacity:.75">${escapeHtml(reading.basis)}</span>` : "";
+            return `Zona ${escapeHtml(properties?.zone ?? "?")} · sector ${escapeHtml(properties?.sector || "—")}<br/>${escapeHtml(riskLabel(reading.level))}${basis}`;
+          });
         },
       }).addTo(map);
       setMapReady(true);
@@ -226,7 +228,8 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
       }).addTo(map);
       map.setView([lat, lon], FOUND_ZOOM);
     }
-    setFinding({ ...reading, label: place.label, level: reading.zone ? zoneLevel(reading.zone) : undefined });
+    const zoneState = reading.zone ? zoneOf(reading.zone) : undefined;
+    setFinding({ ...reading, label: place.label, level: zoneState?.level, basis: zoneState?.basis });
     setSearchedPoint(place);
   };
 

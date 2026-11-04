@@ -52,6 +52,8 @@ export interface Finding {
   label: string;
   zone?: string;
   level?: RiskLevel | null;
+  /** Por qué la zona tiene ese color (exposición, señal y vigencia). */
+  basis?: string;
   inside: boolean;
   nearest: { zone: string; meters: number } | null;
   terrain: TerrainReading;

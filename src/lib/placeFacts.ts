@@ -27,7 +27,7 @@ function officialMapFact(finding: Finding): PlaceFact {
       title: "Mapa oficial",
       verdict: `Zona ${finding.zone ?? "—"}`,
       tone: finding.level ? LEVEL_TONE[finding.level] : "watch",
-      detail: "Dentro del área inundable del Ludueña o el Saladillo.",
+      detail: finding.basis ?? "Dentro del área inundable del Ludueña o el Saladillo.",
     };
   }
   return {

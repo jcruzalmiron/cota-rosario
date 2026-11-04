@@ -44,5 +44,5 @@ export const loadStatus = cache(async function loadStatus(): Promise<Status> {
   const rain = settle("openMeteo", rainResult, failures);
   const discharge = settle("glofas", dischargeResult, failures);
   const weather = settle("weather", weatherResult, failures);
-  return { risk: assessRisk(river, rain), river, rain, discharge, weather, failures };
+  return { risk: assessRisk(river, rain, { now: new Date() }), river, rain, discharge, weather, failures };
 });

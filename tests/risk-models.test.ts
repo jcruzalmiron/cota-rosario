@@ -28,9 +28,10 @@ test("an elevated signal is kept even when the other factor is missing", () => {
   assert.equal(partial.level, "alert");
   assert.equal(partial.incomplete, true);
   assert.equal(assessRisk(river(), rain()).level, "normal");
-  const weighted = assessRisk(null, rain(15));
-  assert.equal(weighted.zones.find((zone) => zone.zone === "A")?.level, "watch");
-  assert.equal(weighted.zones.find((zone) => zone.zone === "1")?.level, null);
+  // Las zonas usan sólo el pronóstico regional de lluvia, sin ponderar por código ni depender del río.
+  const regional = assessRisk(null, rain(15));
+  assert.equal(regional.zones.find((zone) => zone.zone === "A")?.level, "watch");
+  assert.equal(regional.zones.find((zone) => zone.zone === "1")?.level, "watch");
 });
 
 test("missing or invalid thresholds are not normal", () => {

@@ -34,6 +34,7 @@ export function LookupResult({ finding, terrain }: LookupResultProps) {
         <p className="text-ink">
           Dentro del área inundable oficial zona {finding.zone}. Hoy:{" "}
           <span className={finding.level === "normal" ? "text-normal" : "text-alert"}>{riskLabel(finding.level).toLowerCase()}</span>.
+          {finding.basis ? <span className="mt-1 block text-xs leading-snug text-ink-soft">{finding.basis}</span> : null}
         </p>
       ) : (
         <p className="leading-relaxed text-ink">
