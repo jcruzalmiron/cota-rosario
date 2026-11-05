@@ -1,0 +1,63 @@
+{
+  "name": "Sensibilidad de cada zona oficial según el mapa municipal de riesgo climático",
+  "source": "Mapas de Riesgo Climático Rosario 2024 · Municipalidad de Rosario, NAP Global Network y Dirección Nacional de Cambio Climático",
+  "layer": "riesgo_vivienda_precipita",
+  "method": "Proporción de celdas de riesgo medio o alto dentro de los polígonos de cada zona oficial. Una zona es más sensible cuando esa proporción supera la del conjunto de las zonas oficiales. Con menos de 500 celdas la cobertura no alcanza y no se marca.",
+  "reference": {
+    "highShare": 0.242,
+    "mediumOrHighShare": 0.519,
+    "cells": 177549
+  },
+  "zones": {
+    "1": {
+      "cells": 18101,
+      "highShare": 0.108,
+      "mediumOrHighShare": 0.405,
+      "coverage": "suficiente",
+      "moreSensitive": false
+    },
+    "2": {
+      "cells": 94512,
+      "highShare": 0.239,
+      "mediumOrHighShare": 0.47,
+      "coverage": "suficiente",
+      "moreSensitive": false
+    },
+    "3": {
+      "cells": 35363,
+      "highShare": 0.153,
+      "mediumOrHighShare": 0.311,
+      "coverage": "suficiente",
+      "moreSensitive": false
+    },
+    "A": {
+      "cells": 5998,
+      "highShare": 0.68,
+      "mediumOrHighShare": 1,
+      "coverage": "suficiente",
+      "moreSensitive": true
+    },
+    "B": {
+      "cells": 9544,
+      "highShare": 0.495,
+      "mediumOrHighShare": 0.999,
+      "coverage": "suficiente",
+      "moreSensitive": true
+    },
+    "C": {
+      "cells": 13779,
+      "highShare": 0.291,
+      "mediumOrHighShare": 0.99,
+      "coverage": "suficiente",
+      "moreSensitive": true
+    },
+    "D": {
+      "cells": 252,
+      "highShare": 1,
+      "mediumOrHighShare": 1,
+      "coverage": "insuficiente",
+      "moreSensitive": false
+    }
+  },
+  "computedAt": "2026-11-05T01:03:36.010Z"
+}

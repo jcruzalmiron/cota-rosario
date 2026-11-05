@@ -4,6 +4,8 @@ import { fetchRiver, type RiverSnapshot } from "@/lib/river";
 import { fetchWeather, type WeatherNow } from "@/lib/weather";
 import { assessRisk, type RiskAssessment } from "@/lib/risk";
 import type { SOURCES } from "@/lib/sources";
+import { listReports } from "@/lib/reports";
+import { reportsByZone } from "@/lib/zoneReports";
 
 export type SourceId = keyof typeof SOURCES;
 
@@ -38,11 +40,13 @@ function settle<T>(source: SourceId, result: PromiseSettledResult<T>, failures: 
 }
 
 export const loadStatus = cache(async function loadStatus(): Promise<Status> {
-  const [riverResult, rainResult, dischargeResult, weatherResult] = await Promise.allSettled([fetchRiver(), fetchRain(), fetchDischarge(), fetchWeather()]);
+  const [riverResult, rainResult, dischargeResult, weatherResult, reportsResult] = await Promise.allSettled([fetchRiver(), fetchRain(), fetchDischarge(), fetchWeather(), listReports()]);
   const failures: SourceFailure[] = [];
   const river = settle("ina", riverResult, failures);
   const rain = settle("openMeteo", rainResult, failures);
   const discharge = settle("glofas", dischargeResult, failures);
   const weather = settle("weather", weatherResult, failures);
-  return { risk: assessRisk(river, rain, { now: new Date() }), river, rain, discharge, weather, failures };
+  // Si el archivo de reportes no se puede leer, las zonas se evalúan sin aporte vecinal.
+  const byZone = reportsResult.status === "fulfilled" ? reportsByZone(reportsResult.value) : {};
+  return { risk: assessRisk(river, rain, { now: new Date(), reportsByZone: byZone }), river, rain, discharge, weather, failures };
 });

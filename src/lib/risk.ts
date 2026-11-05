@@ -1,5 +1,6 @@
 import type { RainSnapshot } from "@/lib/rain";
 import type { RiverSnapshot, RiverStation } from "@/lib/river";
+import { GRADE_LABEL, gradeBasis, gradeLevel, gradeZone, zoneSensitivity, type AlertGrade, type ZoneContribution, type ZoneReports } from "@/lib/zoneAlert";
 
 export type RiskLevel = "normal" | "watch" | "alert" | "critical";
 
@@ -54,6 +55,9 @@ export interface ZoneSignal {
 export interface ZoneAssessment {
   zone: string;
   level: RiskLevel | null;
+  /** Grado 0–5 (más fino que `level`); null sin señal. */
+  grade: AlertGrade | null;
+  contributions: ZoneContribution[];
   exposure: "area_inundable_oficial";
   signal: ZoneSignal;
   basis: string;
@@ -203,7 +207,7 @@ function rainFactor(rain: RainSnapshot | null, now?: Date): RiskFactor {
  * `now` habilita el control de vigencia del pronóstico (se pasa en producción).
  * Sin `now`, no se evalúa vencimiento (pruebas con datos fijos).
  */
-export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | null, options: { now?: Date } = {}): RiskAssessment {
+export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | null, options: { now?: Date; reportsByZone?: Record<string, ZoneReports> } = {}): RiskAssessment {
   const factors = [riverFactor(river), rainFactor(rain, options.now)];
   const available = factors.filter((factor) => factor.available);
   const noData = available.length === 0;
@@ -224,9 +228,14 @@ export function assessRisk(river: RiverSnapshot | null, rain: RainSnapshot | nul
       ? `Evaluación parcial, sin ${falls.join(" ni ")}. ${baseReason}`
       : baseReason;
 
-  const zones = zoneAssessments(factors[1], rain, options.now);
+  const zones = zoneAssessments(factors, rain, options.now, options.reportsByZone ?? {});
+  const top = zones.reduce<AlertGrade | null>((max, zone) => (zone.grade !== null && (max === null || zone.grade > max) ? zone.grade : max), null);
+  // El titular resume la ciudad; si alguna zona oficial está más arriba, se avisa para no contradecir al mapa.
+  const zoneNote = top !== null && top > 0 && RISK_ORDER.indexOf(gradeLevel(top)!) >= RISK_ORDER.indexOf(level ?? "normal") && level !== "critical"
+    ? ` En las zonas oficiales el grado más alto hoy es ${GRADE_LABEL[top].toLowerCase()}: tocá el mapa para ver por qué.`
+    : "";
 
-  return { level, reason, factors, zones, incomplete, noData, assessedAt: (options.now ?? new Date()).toISOString() };
+  return { level, reason: reason + zoneNote, factors, zones, incomplete, noData, assessedAt: (options.now ?? new Date()).toISOString() };
 }
 
 function zoneSignal(rainFactorResult: RiskFactor, rain: RainSnapshot | null, now: Date | undefined): ZoneSignal {
@@ -238,41 +247,51 @@ function zoneSignal(rainFactorResult: RiskFactor, rain: RainSnapshot | null, now
   return { ...base, status: level === "normal" ? "sin_senales_elevadas" : "elevada", level };
 }
 
-const SIGNAL_BASIS: Record<SignalStatus, string> = {
-  elevada: "Área inundable oficial. Color según el pronóstico regional de lluvia concentrada (no es una medición en la zona).",
-  sin_senales_elevadas: "Área inundable oficial. El pronóstico regional de lluvia está por debajo de los umbrales orientativos.",
-  ausente: "Área inundable oficial. Sin señal actual: el pronóstico de lluvia no respondió. La exposición se mantiene.",
-  vencida: "Área inundable oficial. Sin señal actual: el pronóstico de lluvia está vencido. La exposición se mantiene.",
-};
-
 /**
- * Una sola señal con ámbito aplicable hoy: el pronóstico regional de lluvia, igual
- * para todas las zonas (sin ponderadores por código no respaldados). Cuando haya
- * estaciones por cuenca, se suman como señal con su propia cobertura.
+ * Grado por zona: pronóstico regional de lluvia como base, ajustado por la
+ * sensibilidad de la zona (mapa municipal), el Paraná sólo cuando además llueve
+ * y los reportes vecinales activos dentro de la zona. Ver `gradeZone`.
  */
-function zoneAssessments(rainFactorResult: RiskFactor, rain: RainSnapshot | null, now: Date | undefined): ZoneAssessment[] {
-  const signal = zoneSignal(rainFactorResult, rain, now);
-  return OFFICIAL_ZONES.map((zone) => ({
-    zone,
-    level: signal.level,
-    exposure: "area_inundable_oficial",
-    signal,
-    basis: SIGNAL_BASIS[signal.status],
-  }));
+function zoneAssessments(factors: RiskFactor[], rain: RainSnapshot | null, now: Date | undefined, reportsByZone: Record<string, ZoneReports>): ZoneAssessment[] {
+  const [river, rainResult] = factors;
+  const signal = zoneSignal(rainResult, rain, now);
+  const rainPeakMm = rainResult.available && rain?.peakWindow ? rain.peakWindow.millimeters : null;
+  const riverLevel = river.available ? river.level : null;
+  return OFFICIAL_ZONES.map((zone) => {
+    const graded = gradeZone({ rainPeakMm, riverLevel, sensitivity: zoneSensitivity(zone), reports: reportsByZone[zone] ?? null });
+    return {
+      zone,
+      level: gradeLevel(graded.grade),
+      grade: graded.grade,
+      contributions: graded.contributions,
+      exposure: "area_inundable_oficial",
+      signal,
+      basis: gradeBasis(graded, signal.status),
+    };
+  });
 }
 
 /** Vista mínima de zona que consumen mapa y Mi zona (la del escenario no trae `basis`). */
 export interface ZoneView {
   zone: string;
   level: RiskLevel | null;
+  grade?: AlertGrade | null;
+  contributions?: ZoneContribution[];
   basis?: string;
 }
 
 export const SCENARIO_BASIS = "Escenario simulado: no es una lectura actual.";
 
-export function zoneReading(zones: ZoneView[], zone: string, simulated = false): { level: RiskLevel | null; basis: string | undefined } {
+export interface ZoneReadingResult {
+  level: RiskLevel | null;
+  grade: AlertGrade | null;
+  contributions: ZoneContribution[];
+  basis: string | undefined;
+}
+
+export function zoneReading(zones: ZoneView[], zone: string, simulated = false): ZoneReadingResult {
   const entry = zones.find((candidate) => candidate.zone === zone.trim());
-  return { level: entry?.level ?? null, basis: simulated ? SCENARIO_BASIS : entry?.basis };
+  return { level: entry?.level ?? null, grade: entry?.grade ?? null, contributions: entry?.contributions ?? [], basis: simulated ? SCENARIO_BASIS : entry?.basis };
 }
 
 export interface SimulationInput {
@@ -286,14 +305,18 @@ export interface SimulationResult {
   level: RiskLevel;
   river: RiskLevel;
   rain: RiskLevel;
-  zones: { zone: string; level: RiskLevel }[];
+  zones: { zone: string; level: RiskLevel; grade: AlertGrade; contributions: ZoneContribution[] }[];
 }
 
-/** Escenario: misma regla que la evaluación real. El río no colorea las zonas de los arroyos. */
+/** Escenario: mismas reglas por zona que la evaluación real (sin reportes). El río solo no colorea las zonas. */
 export function simulate({ meters, alert, evacuation, rainPeakMm }: SimulationInput): SimulationResult {
   const river = riverLevel(meters, alert, evacuation);
   const rain = rainLevel(rainPeakMm);
-  const zones = OFFICIAL_ZONES.map((zone) => ({ zone, level: rain }));
+  const zones = OFFICIAL_ZONES.map((zone) => {
+    const graded = gradeZone({ rainPeakMm, riverLevel: alert > 0 ? river : null, sensitivity: zoneSensitivity(zone), reports: null });
+    const grade = graded.grade ?? 0;
+    return { zone, level: gradeLevel(grade)!, grade, contributions: graded.contributions };
+  });
   return { level: worst([river, rain]), river, rain, zones };
 }
 

@@ -2,12 +2,13 @@ import { PlaceFactsGrid } from "@/components/residents/PlaceFactsGrid";
 import { SourceSignals } from "@/components/SourceSignals";
 import type { SourceSignal } from "@/lib/placeSignals";
 import type { ReadingState } from "@/components/residents/usePlaceReadings";
-import { riskColor } from "@/components/status";
+import { zoneColor } from "@/components/status";
 import { CLIMATE_CATEGORY_LABEL, type Finding, type TerrainMeta } from "@/lib/lookup";
 import type { Place } from "@/lib/places";
-import { riskLabel, type RiskLevel } from "@/lib/risk";
+import { riskLabel, type ZoneReadingResult } from "@/lib/risk";
+import { GRADE_LABEL } from "@/lib/zoneAlert";
 
-export type ZoneOf = (zone: string) => { level: RiskLevel | null; basis: string | undefined };
+export type ZoneOf = (zone: string) => ZoneReadingResult;
 
 const OUTSIDE_COLOR = "#74ACDF";
 const LOADING_COLOR = "var(--ink-faint)";
@@ -22,14 +23,14 @@ export function findingFor(place: Place, state: ReadingState, zoneOf: ZoneOf): F
   }
   const { reading } = state;
   const zone = reading.zone ? zoneOf(reading.zone) : undefined;
-  return { ...reading, label: place.name, level: zone?.level, basis: zone?.basis };
+  return { ...reading, label: place.name, level: zone?.level, basis: zone?.basis, grade: zone?.grade, contributions: zone?.contributions };
 }
 
 export function placeColor(finding: Finding | null): string {
   if (!finding) {
     return LOADING_COLOR;
   }
-  return finding.inside ? riskColor(finding.level ?? null) : OUTSIDE_COLOR;
+  return finding.inside ? zoneColor(finding.grade, finding.level ?? null) : OUTSIDE_COLOR;
 }
 
 function summary(finding: Finding | null, state: ReadingState): string {
@@ -39,7 +40,8 @@ function summary(finding: Finding | null, state: ReadingState): string {
   if (!finding) {
     return "Leyendo las capas…";
   }
-  const official = finding.inside ? `Zona ${finding.zone ?? "—"} · hoy ${riskLabel(finding.level ?? null).toLowerCase()}` : "Fuera del área inundable oficial";
+  const today = finding.grade !== null && finding.grade !== undefined ? GRADE_LABEL[finding.grade] : riskLabel(finding.level ?? null);
+  const official = finding.inside ? `Zona ${finding.zone ?? "—"} · hoy ${today.toLowerCase()}` : "Fuera del área inundable oficial";
   const climate = finding.climateRisk ? `lluvias torrenciales ${CLIMATE_CATEGORY_LABEL[finding.climateRisk]}` : null;
   return [official, climate].filter(Boolean).join(" · ");
 }

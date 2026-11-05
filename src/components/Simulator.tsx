@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSimulation } from "@/components/SimulationContext";
-import { RISK_FILL } from "@/components/status";
+import { GRADE_FILL, RISK_FILL } from "@/components/status";
+import { GRADE_LABEL } from "@/lib/zoneAlert";
 import { RAIN_THRESHOLDS, RISK_LABEL, simulate, type RiskLevel } from "@/lib/risk";
 
 const MAX_METERS = 7;
@@ -114,9 +115,10 @@ function SimulatorPanel({ currentMeters, alert, evacuation, currentPeakMm }: Sim
         <span className="meta">Zonas oficiales bajo este escenario</span>
         <div className="flex flex-wrap gap-x-4 gap-y-1.5">
           {result.zones.map((zone) => (
-            <span key={zone.zone} className="flex items-center gap-1.5 text-xs">
-              <span className="size-1.5 rounded-full" style={{ background: RISK_FILL[zone.level] }} aria-hidden="true" />
+            <span key={zone.zone} className="flex items-center gap-1.5 text-xs" title={zone.contributions.map((item) => item.text).join(" ")}>
+              <span className="size-1.5 rounded-full" style={{ background: GRADE_FILL[zone.grade] }} aria-hidden="true" />
               <span className="readout text-ink-soft">Zona {zone.zone}</span>
+              <span className="text-ink-faint">{GRADE_LABEL[zone.grade].toLowerCase()}</span>
             </span>
           ))}
         </div>

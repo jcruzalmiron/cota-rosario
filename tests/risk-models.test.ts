@@ -28,9 +28,10 @@ test("an elevated signal is kept even when the other factor is missing", () => {
   assert.equal(partial.level, "alert");
   assert.equal(partial.incomplete, true);
   assert.equal(assessRisk(river(), rain()).level, "normal");
-  // Las zonas usan sólo el pronóstico regional de lluvia, sin ponderar por código ni depender del río.
+  // Base regional igual para todas; sube un paso sólo donde el mapa municipal de riesgo climático lo respalda.
   const regional = assessRisk(null, rain(15));
-  assert.equal(regional.zones.find((zone) => zone.zone === "A")?.level, "watch");
+  assert.equal(regional.zones.find((zone) => zone.zone === "A")?.grade, 3);
+  assert.equal(regional.zones.find((zone) => zone.zone === "1")?.grade, 2);
   assert.equal(regional.zones.find((zone) => zone.zone === "1")?.level, "watch");
 });
 

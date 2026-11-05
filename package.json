@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src scripts tests",
-    "build:data": "node scripts/build-flood-zones.mjs && node scripts/build-terrain.mjs && node scripts/build-climate-risk.mjs && node scripts/build-civil-defense.mjs && node scripts/build-models.mjs && node scripts/build-river-history.mjs",
+    "build:data": "node scripts/build-flood-zones.mjs && node scripts/build-terrain.mjs && node scripts/build-climate-risk.mjs && node scripts/build-civil-defense.mjs && node scripts/build-models.mjs && node scripts/build-river-history.mjs && node scripts/build-zone-sensitivity.mjs",
     "tunnel": "cloudflared tunnel --config cloudflared.yml --url http://127.0.0.1:3200",
     "typecheck": "next typegen && tsc --noEmit -p .",
     "test": "tsx --test tests/*.test.ts"

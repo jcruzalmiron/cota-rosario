@@ -1,6 +1,7 @@
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import type { RasterMeta } from "@/lib/rasters";
 import type { RiskLevel } from "@/lib/risk";
+import type { AlertGrade, ZoneContribution } from "@/lib/zoneAlert";
 
 export type ClimateCategory = "very low" | "low" | "medium" | "high";
 
@@ -54,6 +55,9 @@ export interface Finding {
   level?: RiskLevel | null;
   /** Por qué la zona tiene ese color (exposición, señal y vigencia). */
   basis?: string;
+  /** Grado 0–5 de la zona y qué lo compone. */
+  grade?: AlertGrade | null;
+  contributions?: ZoneContribution[];
   inside: boolean;
   nearest: { zone: string; meters: number } | null;
   terrain: TerrainReading;

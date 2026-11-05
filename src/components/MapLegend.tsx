@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { RISK_FILL } from "@/components/status";
+import { GRADE_FILL, RISK_FILL } from "@/components/status";
+import { GRADE_LABEL, GRADES } from "@/lib/zoneAlert";
 import { ReportGlyph } from "@/components/reports/ReportGlyph";
 import { REPORT_TYPES, type ReportType } from "@/lib/reportTypes";
-import { RISK_LABEL, RISK_ORDER } from "@/lib/risk";
+import { RISK_ORDER } from "@/lib/risk";
 
 export interface LegendOverlay {
   id: string;
@@ -22,7 +23,7 @@ interface MapLegendProps {
   withReports: boolean;
 }
 
-const SUMMARY = "Zonas: área inundable oficial, coloreada sólo por el pronóstico regional de lluvia. El Paraná no colorea los arroyos. Gris punteado: sin señal actual.";
+const SUMMARY = "Zonas: grado de 0 a 5 según la lluvia prevista, la sensibilidad de la zona y los reportes vecinales. El Paraná solo no pinta los arroyos. Tocá una zona para ver por qué.";
 
 function LayersIcon() {
   return (
@@ -47,16 +48,17 @@ function Section({ title, aside, children }: { title: string; aside?: ReactNode;
 function RiskScale({ officialZones }: { officialZones: number }) {
   return (
     <Section title="Zonas oficiales por arroyo" aside={<span className="readout text-xs text-ink-soft">{officialZones}</span>}>
-      <div className="grid grid-cols-4 gap-1">
-        {RISK_ORDER.map((level) => (
-          <div key={level} className="flex flex-col gap-1.5">
-            <span className="h-2 rounded-full border" style={{ borderColor: RISK_FILL[level], background: `${RISK_FILL[level]}55` }} aria-hidden="true" />
-            <span className="text-[0.6875rem] leading-tight text-ink-soft">{RISK_LABEL[level]}</span>
+      <div className="grid grid-cols-6 gap-1">
+        {GRADES.map((grade) => (
+          <div key={grade} className="flex flex-col gap-1.5">
+            <span className="h-2 rounded-full border" style={{ borderColor: GRADE_FILL[grade], background: `${GRADE_FILL[grade]}55` }} aria-hidden="true" />
+            <span className="text-[0.6875rem] leading-tight text-ink-soft">{GRADE_LABEL[grade]}</span>
           </div>
         ))}
       </div>
       <p className="text-[0.6875rem] leading-snug text-ink-faint">
-        El color es igual para todas las zonas: no es una medición en el barrio. Gris punteado: pronóstico ausente o vencido; la exposición se mantiene.
+        Base: lluvia prevista para la ciudad. Suben un paso las zonas más sensibles según el mapa municipal, el Paraná alto cuando además llueve y
+        los reportes vecinales dentro de la zona. Tocá una zona para ver el detalle. Gris punteado: sin pronóstico ni reportes.
       </p>
     </Section>
   );

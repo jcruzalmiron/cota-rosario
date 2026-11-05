@@ -13,7 +13,8 @@ import { NearbyReports } from "@/components/reports/NearbyReports";
 import { ReportPanel } from "@/components/reports/ReportPanel";
 import { useReports } from "@/components/reports/useReports";
 import { useSimulation } from "@/components/SimulationContext";
-import { RISK_FILL, riskColor } from "@/components/status";
+import { RISK_FILL, zoneColor } from "@/components/status";
+import { GRADE_LABEL } from "@/lib/zoneAlert";
 import type { ClimateMeta, Finding, TerrainMeta } from "@/lib/lookup";
 import { createPlaceReader, geocode, type GeocodedPlace, type PlaceReader } from "@/lib/placeReader";
 import type { AddressSuggestion } from "@/lib/addressSuggestions";
@@ -107,11 +108,12 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
 
   const zoneStyle = useCallback(
     (feature: ZoneFeature | undefined) => {
-      const level = zoneLevel(feature?.properties?.zone ?? "");
-      const fill = riskColor(level);
+      const reading = zoneOf(feature?.properties?.zone ?? "");
+      const level = reading.level;
+      const fill = zoneColor(reading.grade, level);
       return { color: fill, weight: 1, fillColor: fill, fillOpacity: scenario ? ZONE_FILL_OPACITY_SIMULATED : ZONE_FILL_OPACITY, dashArray: level === null ? "4 4" : undefined };
     },
-    [scenario, zoneLevel],
+    [scenario, zoneOf],
   );
   const zoneStyleRef = useRef(zoneStyle);
   useEffect(() => {
@@ -159,7 +161,11 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
           layer.bindPopup(() => {
             const reading = zoneRef.current(properties?.zone ?? "");
             const basis = reading.basis ? `<br/><span style="opacity:.75">${escapeHtml(reading.basis)}</span>` : "";
-            return `Zona ${escapeHtml(properties?.zone ?? "?")} · sector ${escapeHtml(properties?.sector || "—")}<br/>${escapeHtml(riskLabel(reading.level))}${basis}`;
+            const label = reading.grade !== null ? `${GRADE_LABEL[reading.grade]} · ${reading.grade}/5` : riskLabel(reading.level);
+            const why = reading.contributions.length
+              ? `<ul style="margin:.35em 0 0;padding-left:1.1em;opacity:.85">${reading.contributions.map((item) => `<li>${escapeHtml(item.points > 0 ? `+${item.points} · ` : "")}${escapeHtml(item.text)}</li>`).join("")}</ul>`
+              : "";
+            return `Zona ${escapeHtml(properties?.zone ?? "?")} · sector ${escapeHtml(properties?.sector || "—")}<br/><strong>${escapeHtml(label)}</strong>${basis}${why}`;
           });
         },
       }).addTo(map);
@@ -227,13 +233,13 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
         radius: 7,
         color: "#ececee",
         weight: 2,
-        fillColor: riskColor(reading.zone ? zoneLevel(reading.zone) : null),
+        fillColor: reading.zone ? zoneColor(zoneOf(reading.zone).grade, zoneLevel(reading.zone)) : zoneColor(null, null),
         fillOpacity: 1,
       }).addTo(map);
       map.setView([lat, lon], FOUND_ZOOM);
     }
     const zoneState = reading.zone ? zoneOf(reading.zone) : undefined;
-    setFinding({ ...reading, label: place.label, level: zoneState?.level, basis: zoneState?.basis });
+    setFinding({ ...reading, label: place.label, level: zoneState?.level, basis: zoneState?.basis, grade: zoneState?.grade, contributions: zoneState?.contributions });
     setSearchedPoint(place);
   };
 

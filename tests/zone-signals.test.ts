@@ -61,9 +61,10 @@ test("C1: un pronóstico vencido no cuenta como normal ni como elevado", () => {
   assert.equal(stale.factors.find((f) => f.id === "rain")?.measured, "dato vencido");
 });
 
-test("C1: lluvia elevada pinta todas las zonas por igual, con su fuente y ámbito", () => {
+test("C1: lluvia elevada pinta todas las zonas desde la misma base regional, con su fuente y ámbito", () => {
   const r = assessRisk(null, rain(26), { now: NOW });
   assert.ok(r.zones.every((z) => z.level === "alert" && z.signal.scope === "regional" && z.signal.at === FETCHED));
+  assert.ok(r.zones.every((z) => z.contributions[0].source === "lluvia" && z.contributions[0].points === 3));
   assert.match(r.zones[0].basis, /pronóstico regional/);
   assert.equal(r.assessedAt, NOW.toISOString());
 });
@@ -73,9 +74,9 @@ test("C1: el simulador aplica la misma regla y se marca como escenario", () => {
   assert.equal(s.river, "critical");
   assert.ok(s.zones.every((z) => z.level === "normal"));
   assert.equal(simulate({ meters: 1, alert: 5, evacuation: 5.3, rainPeakMm: 31 }).zones[0].level, "critical");
-  assert.deepEqual(zoneReading(s.zones, "A", true), { level: "normal", basis: SCENARIO_BASIS });
-  assert.deepEqual(zoneReading(s.zones, " 2 "), { level: "normal", basis: undefined });
-  assert.deepEqual(zoneReading(s.zones, "Z"), { level: null, basis: undefined });
+  assert.deepEqual(zoneReading(s.zones, "A", true).basis, SCENARIO_BASIS);
+  assert.deepEqual([zoneReading(s.zones, " 2 ").level, zoneReading(s.zones, " 2 ").grade, zoneReading(s.zones, " 2 ").basis], ["normal", 0, undefined]);
+  assert.deepEqual(zoneReading(s.zones, "Z"), { level: null, grade: null, contributions: [], basis: undefined });
 });
 
 test("C1: Mi zona muestra exposición y motivo; fuera del polígono no hereda señal", () => {
