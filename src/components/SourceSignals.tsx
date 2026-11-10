@@ -1,5 +1,6 @@
 import type { Finding } from "@/lib/lookup";
 import { SOURCE_STATUS_LABEL, type SourceSignal, type SourceStatus } from "@/lib/placeSignals";
+import { GradeTimeline } from "@/components/GradeTimeline";
 import { GRADE_FILL, riskColor } from "@/components/status";
 import { ALERT_CRITERIA_VERSION, GRADE_LABEL, MAX_GRADE, type ContributionKind } from "@/lib/zoneAlert";
 
@@ -90,6 +91,12 @@ export function SourceSignals({ signals, finding, simulated, className = "border
               </li>
             ))}
           </ul>
+          {finding.timeline?.length ? (
+            <div className="mt-2.5">
+              <h4 className="mb-1 text-[0.6875rem] font-medium text-ink-soft">Próximas 48 h en esta zona</h4>
+              <GradeTimeline steps={finding.timeline} />
+            </div>
+          ) : null}
           <p className="mt-1 text-[0.6875rem] leading-snug text-ink-faint">Criterios {ALERT_CRITERIA_VERSION}: todavía no están calibrados con eventos medidos en la zona.</p>
         </div>
       ) : null}

@@ -1,6 +1,6 @@
 import type { RainSnapshot } from "@/lib/rain";
 import type { RiverSnapshot, RiverStation } from "@/lib/river";
-import { GRADE_LABEL, gradeBasis, gradeLevel, gradeZone, zoneSensitivity, type AlertGrade, type ZoneContribution, type ZoneReports } from "@/lib/zoneAlert";
+import { GRADE_LABEL, gradeBasis, gradeLevel, gradeZone, rainWindows, zoneSensitivity, zoneTimeline, type AlertGrade, type TimelineStep, type ZoneContribution, type ZoneReports } from "@/lib/zoneAlert";
 
 export type RiskLevel = "normal" | "watch" | "alert" | "critical";
 
@@ -58,6 +58,8 @@ export interface ZoneAssessment {
   /** Grado 0–5 (más fino que `level`); null sin señal. */
   grade: AlertGrade | null;
   contributions: ZoneContribution[];
+  /** Grado previsto hora por hora (ventanas de 2 h); vacío sin pronóstico vigente. */
+  timeline: TimelineStep[];
   exposure: "area_inundable_oficial";
   signal: ZoneSignal;
   basis: string;
@@ -257,13 +259,16 @@ function zoneAssessments(factors: RiskFactor[], rain: RainSnapshot | null, now: 
   const signal = zoneSignal(rainResult, rain, now);
   const rainPeakMm = rainResult.available && rain?.peakWindow ? rain.peakWindow.millimeters : null;
   const riverLevel = river.available ? river.level : null;
+  const windows = rainPeakMm !== null && rain ? rainWindows(rain.hours) : [];
   return OFFICIAL_ZONES.map((zone) => {
-    const graded = gradeZone({ rainPeakMm, riverLevel, sensitivity: zoneSensitivity(zone), reports: reportsByZone[zone] ?? null });
+    const context = { riverLevel, sensitivity: zoneSensitivity(zone), reports: reportsByZone[zone] ?? null };
+    const graded = gradeZone({ ...context, rainPeakMm });
     return {
       zone,
       level: gradeLevel(graded.grade),
       grade: graded.grade,
       contributions: graded.contributions,
+      timeline: zoneTimeline(windows, context),
       exposure: "area_inundable_oficial",
       signal,
       basis: gradeBasis(graded, signal.status),
@@ -277,6 +282,7 @@ export interface ZoneView {
   level: RiskLevel | null;
   grade?: AlertGrade | null;
   contributions?: ZoneContribution[];
+  timeline?: TimelineStep[];
   basis?: string;
 }
 
@@ -286,12 +292,13 @@ export interface ZoneReadingResult {
   level: RiskLevel | null;
   grade: AlertGrade | null;
   contributions: ZoneContribution[];
+  timeline: TimelineStep[];
   basis: string | undefined;
 }
 
 export function zoneReading(zones: ZoneView[], zone: string, simulated = false): ZoneReadingResult {
   const entry = zones.find((candidate) => candidate.zone === zone.trim());
-  return { level: entry?.level ?? null, grade: entry?.grade ?? null, contributions: entry?.contributions ?? [], basis: simulated ? SCENARIO_BASIS : entry?.basis };
+  return { level: entry?.level ?? null, grade: entry?.grade ?? null, contributions: entry?.contributions ?? [], timeline: simulated ? [] : (entry?.timeline ?? []), basis: simulated ? SCENARIO_BASIS : entry?.basis };
 }
 
 export interface SimulationInput {

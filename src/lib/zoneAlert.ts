@@ -161,3 +161,40 @@ export function gradeBasis(grade: ZoneGrade, rainStatus: "elevada" | "sin_senale
   const base = rainStatus === "ausente" || rainStatus === "vencida" ? "sin pronóstico vigente; sólo reportes vecinales" : "base: pronóstico regional de lluvia";
   return `Área inundable oficial. ${GRADE_LABEL[grade.grade]} (${grade.grade}/${MAX_GRADE}), ${base}. Criterios ${ALERT_CRITERIA_VERSION}.`;
 }
+
+/** Grado previsto para la ventana de dos horas que empieza en `hour`. */
+export interface TimelineStep {
+  hour: string;
+  grade: AlertGrade;
+}
+
+/** Acumulados de dos horas consecutivas, redondeados igual que el pico del pronóstico. */
+export function rainWindows(hours: readonly { hour: string; millimeters: number }[]): { hour: string; millimeters: number }[] {
+  return hours.slice(0, -1).map((entry, index) => ({ hour: entry.hour, millimeters: Number((entry.millimeters + hours[index + 1].millimeters).toFixed(1)) }));
+}
+
+/**
+ * Cómo evoluciona el grado de una zona con la lluvia prevista hora por hora.
+ * El río y los reportes se toman como están ahora: no hay pronóstico de ellos.
+ */
+export function zoneTimeline(windows: readonly { hour: string; millimeters: number }[], input: Omit<ZoneGradeInput, "rainPeakMm">): TimelineStep[] {
+  return windows.map((window) => ({ hour: window.hour, grade: gradeZone({ ...input, rainPeakMm: window.millimeters }).grade ?? 0 }));
+}
+
+export interface TimelinePeak {
+  grade: AlertGrade;
+  /** Inicio del primer tramo en el grado máximo. */
+  from: string;
+  /** Primera hora posterior en la que baja; null si sigue hasta el final de la serie. */
+  until: string | null;
+  /** Si toda la serie tiene el mismo grado. */
+  flat: boolean;
+}
+
+export function timelinePeak(steps: readonly TimelineStep[]): TimelinePeak | null {
+  if (!steps.length) return null;
+  const grade = steps.reduce<AlertGrade>((max, step) => (step.grade > max ? step.grade : max), 0);
+  const start = steps.findIndex((step) => step.grade === grade);
+  const end = steps.findIndex((step, index) => index > start && step.grade < grade);
+  return { grade, from: steps[start].hour, until: end === -1 ? null : steps[end].hour, flat: steps.every((step) => step.grade === grade) };
+}

@@ -76,7 +76,7 @@ test("C1: el simulador aplica la misma regla y se marca como escenario", () => {
   assert.equal(simulate({ meters: 1, alert: 5, evacuation: 5.3, rainPeakMm: 31 }).zones[0].level, "critical");
   assert.deepEqual(zoneReading(s.zones, "A", true).basis, SCENARIO_BASIS);
   assert.deepEqual([zoneReading(s.zones, " 2 ").level, zoneReading(s.zones, " 2 ").grade, zoneReading(s.zones, " 2 ").basis], ["normal", 0, undefined]);
-  assert.deepEqual(zoneReading(s.zones, "Z"), { level: null, grade: null, contributions: [], basis: undefined });
+  assert.deepEqual(zoneReading(s.zones, "Z"), { level: null, grade: null, contributions: [], timeline: [], basis: undefined });
 });
 
 test("C1: Mi zona muestra exposición y motivo; fuera del polígono no hereda señal", () => {

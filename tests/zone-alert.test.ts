@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { FeatureCollection, Polygon } from "geojson";
-import { gradeLevel, gradeZone, rainGrade, zoneSensitivity, type ZoneSensitivity } from "../src/lib/zoneAlert";
+import { gradeLevel, gradeZone, rainGrade, rainWindows, timelinePeak, zoneSensitivity, zoneTimeline, type ZoneSensitivity } from "../src/lib/zoneAlert";
+import { timelineSentence } from "../src/components/GradeTimeline";
 import { assessRisk, simulate } from "../src/lib/risk";
 import { reportsByZone } from "../src/lib/zoneReports";
 import type { Report } from "../src/lib/reportTypes";
@@ -65,4 +66,21 @@ test("los reportes se agrupan por la zona que los contiene; los de afuera no cue
   const report = (lat: number, lon: number, type: Report["type"], confirmations = 0): Report => ({ id: `${lat}${lon}${type}`, lat, lon, type, description: "", createdAt: "2026-11-04T12:00:00.000Z", confirmations });
   const grouped = reportsByZone([report(-32.95, -60.65, "home", 2), report(-32.95, -60.66, "street"), report(-32.5, -60.65, "home")], collection);
   assert.deepEqual(grouped, { "2": { count: 2, homes: 1, confirmations: 2 } });
+});
+
+test("la línea de tiempo dice cuándo sube y cuándo baja, y su máximo coincide con el grado de la zona", () => {
+  const start = Date.parse("2026-11-04T03:00:00.000Z");
+  const mm = [0, 0, 0, 9, 9, 1, 0, 0];
+  const hours = mm.map((millimeters, index) => ({ hour: new Date(start + index * 3_600_000).toISOString(), millimeters, probability: null }));
+  const windows = rainWindows(hours);
+  assert.deepEqual(windows.map((w) => w.millimeters), [0, 0, 9, 18, 10, 1, 0]);
+  const steps = zoneTimeline(windows, { riverLevel: null, sensitivity: SENSITIVE, reports: null });
+  assert.deepEqual(steps.map((s) => s.grade), [0, 0, 2, 3, 2, 0, 0]);
+  const peak = timelinePeak(steps)!;
+  assert.deepEqual([peak.grade, peak.from, peak.until, peak.flat], [3, hours[3].hour, hours[4].hour, false]);
+  assert.match(timelineSentence(steps)!, /^Sube a alerta el .*; baja desde el /);
+  assert.equal(timelineSentence(zoneTimeline(rainWindows(hours.slice(0, 3)), { riverLevel: null, sensitivity: PLAIN, reports: null })), "Sin cambios previstos en 48 h.");
+  const rain: RainSnapshot = { hours, accumulated24h: 19, peakWindow: { millimeters: 18, from: hours[3].hour, until: hours[4].hour }, fetchedAt: hours[0].hour };
+  for (const zone of assessRisk(null, rain).zones) assert.equal(timelinePeak(zone.timeline)?.grade, zone.grade);
+  assert.deepEqual(assessRisk(null, null).zones[0].timeline, []);
 });

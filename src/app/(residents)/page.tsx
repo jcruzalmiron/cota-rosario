@@ -15,6 +15,7 @@ import { DataStatus } from "@/components/DataStatus";
 import { loadStatus } from "@/lib/status";
 import { riskLabel } from "@/lib/risk";
 import { sourceSignals } from "@/lib/placeSignals";
+import { ZoneOutlook } from "@/components/ZoneOutlook";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,14 @@ export default async function ResidentsPage() {
               <p className="text-xs leading-relaxed text-ink-soft">{factor.detail}</p>
             </div>
           ))}
+        </section>
+
+        <section className="hairline px-5 py-6 sm:px-5">
+          <h2 className="meta">Zonas oficiales · próximas 48 h</h2>
+          <p className="mt-1 text-xs leading-relaxed text-ink-faint">Grado de cada zona según la lluvia prevista hora por hora. El río y los reportes cuentan como están ahora.</p>
+          <div className="mt-4">
+            <ZoneOutlook zones={risk.zones} />
+          </div>
         </section>
 
         <section className="hairline px-5 py-6 sm:px-5">

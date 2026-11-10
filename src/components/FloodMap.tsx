@@ -239,7 +239,7 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
       map.setView([lat, lon], FOUND_ZOOM);
     }
     const zoneState = reading.zone ? zoneOf(reading.zone) : undefined;
-    setFinding({ ...reading, label: place.label, level: zoneState?.level, basis: zoneState?.basis, grade: zoneState?.grade, contributions: zoneState?.contributions });
+    setFinding({ ...reading, label: place.label, level: zoneState?.level, basis: zoneState?.basis, grade: zoneState?.grade, contributions: zoneState?.contributions, timeline: zoneState?.timeline });
     setSearchedPoint(place);
   };
 

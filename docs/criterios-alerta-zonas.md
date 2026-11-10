@@ -49,3 +49,11 @@ El simulador aplica las reglas 1 a 3. No usa reportes.
 - **Estación del Ludueña (COTA-03):** permitiría reemplazar el supuesto de la regla 3 por una señal medida en la cuenca.
 - **Reclamos municipales (COTA-02):** con fecha, ubicación y una definición estable, permitirían contrastar cada grado con eventos reales por zona.
 - **Revisión de cortes y pesos:** los cortes y pesos de esta versión no están ajustados con eventos medidos. Cada cambio de criterio sube la versión (`ALERT_CRITERIA_VERSION`).
+
+## Evolución en 48 h
+
+La misma regla se aplica a cada ventana de dos horas del pronóstico horario. Así se ve cuándo sube y cuándo baja el grado de cada zona.
+
+- El grado actual de la zona es el máximo de esa serie.
+- El Paraná y los reportes se toman como están ahora, porque no hay pronóstico de ellos.
+- Se muestra en la portada (zonas agrupadas cuando coinciden) y en la ficha de una dirección dentro de una zona.

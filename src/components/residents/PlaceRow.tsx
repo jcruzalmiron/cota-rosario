@@ -23,7 +23,7 @@ export function findingFor(place: Place, state: ReadingState, zoneOf: ZoneOf): F
   }
   const { reading } = state;
   const zone = reading.zone ? zoneOf(reading.zone) : undefined;
-  return { ...reading, label: place.name, level: zone?.level, basis: zone?.basis, grade: zone?.grade, contributions: zone?.contributions };
+  return { ...reading, label: place.name, level: zone?.level, basis: zone?.basis, grade: zone?.grade, contributions: zone?.contributions, timeline: zone?.timeline };
 }
 
 export function placeColor(finding: Finding | null): string {
