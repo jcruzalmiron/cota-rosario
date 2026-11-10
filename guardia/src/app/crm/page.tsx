@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, fmtDateTime, type ApiError } from "../ui/api";
+import { ask } from "../ui/ask";
 
 interface Task { id: string; title: string; company: string; due_at: string; version: number; reminded: boolean; owner: string }
 interface Summary { capacidad: number; provisoria: number; confirmada: number; disponible: number }
@@ -38,10 +39,13 @@ export default function CrmPage() {
   }
 
   async function taskAction(t: Task, action: "hecha" | "reprogramar") {
-    const payload = action === "hecha"
-      ? { action, version: t.version, result: prompt("Resultado de la gestión:") ?? "" }
-      : { action, version: t.version, days: Number(prompt("¿En cuántos días?", "7")) || 7 };
-    if (action === "hecha" && !payload.result) return;
+    const answer = await ask(
+      action === "hecha"
+        ? { title: "Marcar la gestión como hecha", fields: [{ name: "result", label: "Resultado de la gestión", type: "textarea", required: true }], confirmLabel: "Marcar hecha" }
+        : { title: "Reprogramar la gestión", fields: [{ name: "days", label: "¿En cuántos días?", type: "number", initial: "7", required: true, min: 1, max: 365 }], confirmLabel: "Reprogramar" },
+    );
+    if (!answer) return;
+    const payload = action === "hecha" ? { action, version: t.version, result: answer.result } : { action, version: t.version, days: Number(answer.days) || 7 };
     try {
       await api(`/api/crm/tasks/${t.id}`, { body: payload });
       await load();

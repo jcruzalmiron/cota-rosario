@@ -4,6 +4,7 @@ import { DEV_USERS, devModeEnabled } from "@/server/http";
 import { DevUserPicker } from "./ui/dev-user-picker";
 import { PageHeader } from "./ui/page-header";
 import { SideNav } from "./ui/side-nav";
+import { AskHost } from "./ui/ask";
 import "./globals.css";
 
 // Identidad por request: nunca prerenderizar.
@@ -44,6 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
           </main>
         </div>
+        <AskHost />
       </body>
     </html>
   );

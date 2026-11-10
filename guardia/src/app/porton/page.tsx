@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, fmtDateTime, fmtTime, type ApiError } from "../ui/api";
+import { ask } from "../ui/ask";
 
 type Direction = "salida" | "entrada";
 interface Movement {
@@ -101,13 +102,30 @@ export default function PortonPage() {
   const camera = useCameraScanner(onScan);
 
   async function correct(m: Movement) {
-    const action = prompt("Escribí «salida», «entrada» o «descartar»:", m.direction === "salida" ? "entrada" : "salida");
-    if (!action) return;
-    const reason = prompt("Motivo de la corrección:");
-    if (!reason) return;
-    const discard = action.trim().toLowerCase().startsWith("desc");
-    const direction = discard ? undefined : (action.trim().toLowerCase() as Direction);
-    if (!discard && direction !== "salida" && direction !== "entrada") return setMsg({ text: "Acción no reconocida.", tone: "err" });
+    const answer = await ask({
+      title: "Corregir el movimiento",
+      detail: "El registro original se conserva; la corrección queda con tu nombre y el motivo.",
+      fields: [
+        {
+          name: "action",
+          label: "Qué debió registrarse",
+          type: "select",
+          initial: m.direction === "salida" ? "entrada" : "salida",
+          required: true,
+          options: [
+            { value: "salida", label: "Salida" },
+            { value: "entrada", label: "Entrada" },
+            { value: "descartar", label: "Descartar el movimiento" },
+          ],
+        },
+        { name: "reason", label: "Motivo de la corrección", type: "textarea", required: true },
+      ],
+      confirmLabel: "Guardar corrección",
+    });
+    if (!answer) return;
+    const reason = answer.reason;
+    const discard = answer.action === "descartar";
+    const direction = discard ? undefined : (answer.action as Direction);
     try {
       await api(`/api/gate/movements/${m.id}`, { body: { direction, discard, reason } });
       await load();

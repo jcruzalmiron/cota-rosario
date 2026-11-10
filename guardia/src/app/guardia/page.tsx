@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, fmtTime, type ApiError } from "../ui/api";
+import { api, fmtDuration, fmtTime, type ApiError } from "../ui/api";
+import { ask } from "../ui/ask";
 
 type Issue = { field: string; message: string };
 interface Incident { id: string; version: number; status: string; location_text: string | null }
@@ -79,7 +80,14 @@ function IntakePanel() {
 
   async function exception() {
     if (!incident) return;
-    const reason = prompt("Motivo de la excepción (queda auditado):");
+    const answer = await ask({
+      title: "Excepción de jefatura",
+      detail: "Permite despachar con datos faltantes. Queda auditada y los datos pendientes pasan a ser una tarea.",
+      fields: [{ name: "reason", label: "Motivo", type: "textarea", required: true }],
+      confirmLabel: "Registrar excepción",
+      danger: true,
+    });
+    const reason = answer?.reason;
     if (!reason) return;
     try {
       await api(`/api/incidents/${incident.id}/exception`, { body: { reason } });
@@ -173,14 +181,23 @@ function RadioBoard() {
   }, [load]);
 
   async function update(d: BoardItem, kind: "novedad" | "arribo" | "panorama" | "retorno") {
-    let body: string | undefined;
-    if (kind === "arribo" || kind === "panorama") {
-      body = prompt(kind === "arribo" ? "Panorama de arribo (si todavía no lo dieron, dejalo vacío y queda pendiente):" : "Panorama:") ?? undefined;
-      if (kind === "panorama" && !body) return;
-    } else if (kind === "novedad") {
-      body = prompt("Novedad del móvil:") ?? undefined;
-      if (body === undefined) return;
-    }
+    const where = d.location_text ?? "sin lugar";
+    const answer = await ask(
+      kind === "arribo"
+        ? {
+            title: `Arribo de ${d.mobile_code}`,
+            detail: where,
+            fields: [{ name: "body", label: "Panorama de arribo", type: "textarea", hint: "Si todavía no lo dieron, dejalo vacío: queda como pendiente." }],
+            confirmLabel: "Registrar arribo",
+          }
+        : kind === "panorama"
+          ? { title: `Panorama de ${d.mobile_code}`, detail: where, fields: [{ name: "body", label: "Panorama", type: "textarea", required: true }], confirmLabel: "Cargar panorama" }
+          : kind === "novedad"
+            ? { title: `Novedad de ${d.mobile_code}`, detail: where, fields: [{ name: "body", label: "Novedad", type: "textarea", required: true }], confirmLabel: "Registrar novedad" }
+            : { title: `¿Registrar el retorno de ${d.mobile_code}?`, detail: `${where}. El móvil deja de figurar en servicio.`, confirmLabel: "Registrar retorno", danger: true },
+    );
+    if (!answer) return;
+    const body = answer.body || undefined;
     try {
       await api(`/api/dispatch/${d.id}/updates`, { body: { kind, channel: "radio", body, sourceKey: crypto.randomUUID() } });
       await load();
@@ -210,8 +227,8 @@ function RadioBoard() {
             <div className="where">{d.location_text ?? "Sin lugar"} · {d.category?.replaceAll("_", " ") ?? "sin tipo"}</div>
             <div className="times">
               <span>Despacho {fmtTime(d.dispatched_at)}</span>
-              <span className="mono">{d.elapsedMin} min</span>
-              <span>Última novedad: {d.sinceLastUpdateMin == null ? "ninguna" : `hace ${d.sinceLastUpdateMin} min`}</span>
+              <span className="mono">{fmtDuration(d.elapsedMin)}</span>
+              <span>Última novedad: {d.sinceLastUpdateMin == null ? "ninguna" : `hace ${fmtDuration(d.sinceLastUpdateMin)}`}</span>
               <span>ETA: sin base validada</span>
             </div>
             {d.open_alert_id && (
@@ -223,7 +240,7 @@ function RadioBoard() {
               <button onClick={() => update(d, "novedad")}>Novedad</button>
               {d.status !== "en_lugar" && <button onClick={() => update(d, "arribo")}>Arribo</button>}
               {d.panorama_pending && <button onClick={() => update(d, "panorama")}>Cargar panorama</button>}
-              <button className="ghost" onClick={() => confirm(`¿Registrar retorno de ${d.mobile_code}?`) && update(d, "retorno")}>Retorno</button>
+              <button className="ghost" onClick={() => update(d, "retorno")}>Retorno</button>
             </div>
           </li>
         ))}

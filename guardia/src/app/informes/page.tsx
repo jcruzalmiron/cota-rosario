@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api, type ApiError } from "../ui/api";
+import { ask } from "../ui/ask";
 
 const KIND = "informe_intervencion_fiscalia";
 
@@ -75,7 +76,13 @@ export default function InformesPage() {
   });
 
   const observe = () => run(async () => {
-    const note = prompt("Observación para quien redactó:");
+    const answer = await ask({
+      title: "Observar el informe",
+      detail: "Vuelve a quien lo redactó con tu observación. No se aprueba.",
+      fields: [{ name: "note", label: "Observación", type: "textarea", required: true }],
+      confirmLabel: "Enviar observación",
+    });
+    const note = answer?.note;
     if (!note) return;
     await api(`/api/reports/${view!.revision.id}/approve`, { body: { observe: note } });
     await load(view!.revision.id);

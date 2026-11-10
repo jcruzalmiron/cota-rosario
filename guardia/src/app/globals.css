@@ -253,3 +253,23 @@ button.csv { margin-bottom: 14px; }
   .card { border: 0; box-shadow: none; padding: 0; }
   .card > .summary-head:first-child { margin: 0 0 12px; padding: 0; border: 0; }
 }
+
+/* Diálogo propio (reemplaza prompt/confirm) */
+dialog.ask {
+  width: min(30rem, calc(100vw - 32px)); padding: 0; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--surface); color: var(--ink); box-shadow: 0 24px 60px rgba(16, 20, 26, .28);
+}
+dialog.ask::backdrop { background: rgba(16, 20, 26, .5); }
+dialog.ask form { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+dialog.ask h2 { margin: 0; font-size: 17px; letter-spacing: 0; text-transform: none; color: var(--ink); }
+dialog.ask .hint { margin: 0; }
+dialog.ask .field { margin: 0; }
+dialog.ask .optional { font-weight: 400; color: var(--muted); }
+.actions.end { justify-content: flex-end; margin-top: 4px; }
+button.primary.neutral { background: var(--ink); border-color: var(--ink); }
+button.primary.neutral:hover { background: #2a2f37; border-color: #2a2f37; }
+button.primary.neutral:disabled { background: var(--ink); border-color: var(--ink); }
+@media (max-width: 520px) {
+  dialog.ask { margin: auto auto 0; width: 100vw; max-width: 100vw; border-radius: var(--r) var(--r) 0 0; }
+  dialog.ask .actions.end button { flex: 1; min-height: 44px; }
+}

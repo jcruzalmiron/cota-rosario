@@ -27,3 +27,12 @@ export const fmtDateTime = (iso: string | Date | null | undefined) =>
   iso
     ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "short", timeStyle: "short" }).format(new Date(iso))
     : "—";
+
+/** Minutos en formato legible: "45 min", "3 h 05 min", "5 d 15 h". */
+export function fmtDuration(minutes: number): string {
+  const total = Math.max(0, Math.round(minutes));
+  if (total < 120) return `${total} min`;
+  const hours = Math.floor(total / 60);
+  if (hours < 48) return `${hours} h ${String(total % 60).padStart(2, "0")} min`;
+  return `${Math.floor(hours / 24)} d ${hours % 24} h`;
+}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, fmtDateTime, type ApiError } from "../ui/api";
+import { ask } from "../ui/ask";
 
 type Status = "nuevo" | "en_revision" | "asignado" | "derivacion_pendiente" | "derivado" | "cerrado";
 interface Item {
@@ -79,8 +80,16 @@ export default function BandejaPage() {
     if (!selected) return;
     let reason: string | undefined;
     if (needsReason(selected.incident.status, to)) {
-      reason = prompt(to === "cerrado" ? "Motivo del cierre:" : "Motivo de la reapertura o revisión:") ?? undefined;
-      if (!reason?.trim()) return;
+      const closing = to === "cerrado";
+      const answer = await ask({
+        title: closing ? "Cerrar el caso" : "Reabrir o mandar a revisión",
+        detail: "El motivo queda en el historial del caso.",
+        fields: [{ name: "reason", label: closing ? "Motivo del cierre" : "Motivo", type: "textarea", required: true }],
+        confirmLabel: closing ? "Cerrar caso" : "Confirmar",
+        danger: closing,
+      });
+      reason = answer?.reason;
+      if (!reason) return;
     }
     try {
       await api(`/api/incidents/${selected.incident.id}/transition`, { body: { version: selected.incident.version, to, reason } });
