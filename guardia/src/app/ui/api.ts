@@ -20,12 +20,12 @@ export async function api<T>(path: string, init?: { method?: string; body?: unkn
 
 export const fmtTime = (iso: string | Date | null | undefined) =>
   iso
-    ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit" }).format(new Date(iso))
+    ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso))
     : "—";
 
 export const fmtDateTime = (iso: string | Date | null | undefined) =>
   iso
-    ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "short", timeStyle: "short" }).format(new Date(iso))
+    ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso))
     : "—";
 
 /** Minutos en formato legible: "45 min", "3 h 05 min", "5 d 15 h". */
@@ -35,4 +35,11 @@ export function fmtDuration(minutes: number): string {
   const hours = Math.floor(total / 60);
   if (hours < 48) return `${hours} h ${String(total % 60).padStart(2, "0")} min`;
   return `${Math.floor(hours / 24)} d ${hours % 24} h`;
+}
+
+/** Cronómetro desde un instante: "07:42" en la primera hora, después "3 h 05 min" o "5 d 15 h". */
+export function fmtElapsed(fromIso: string, nowMs: number): string {
+  const seconds = Math.max(0, Math.floor((nowMs - new Date(fromIso).getTime()) / 1000));
+  if (seconds < 3600) return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+  return fmtDuration(seconds / 60);
 }

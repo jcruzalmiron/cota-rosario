@@ -13,9 +13,9 @@ const SECTIONS: { prefix: string; title: string; lead: string }[] = [
   { prefix: "/crm", title: "CRM", lead: "Empresas, seguimientos y reservas para eventos del cuartel." },
 ];
 
-const fmt = new Intl.DateTimeFormat("es-AR", {
-  timeZone: "America/Argentina/Buenos_Aires", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
-});
+const ZONE = "America/Argentina/Buenos_Aires";
+const hourFmt = new Intl.DateTimeFormat("es-AR", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const dayFmt = new Intl.DateTimeFormat("es-AR", { timeZone: ZONE, weekday: "long", day: "numeric", month: "long" });
 
 function Clock() {
   const [now, setNow] = useState<Date | null>(null);
@@ -24,7 +24,12 @@ function Clock() {
     const t = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(t);
   }, []);
-  return <time className="clock" dateTime={now?.toISOString()}>{now ? fmt.format(now) : " "}</time>;
+  return (
+    <time className="clock" dateTime={now?.toISOString()}>
+      <b>{now ? hourFmt.format(now) : "--:--"}</b>
+      <span>{now ? dayFmt.format(now) : " "}</span>
+    </time>
+  );
 }
 
 export function PageHeader() {

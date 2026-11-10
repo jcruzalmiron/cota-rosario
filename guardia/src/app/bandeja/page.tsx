@@ -143,7 +143,7 @@ export default function BandejaPage() {
             {data?.items.map((i) => (
               <li key={i.id}>
                 <button className={`row-btn ${selected?.incident.id === i.id ? "active" : ""}`} onClick={() => open(i.id)}>
-                  <span className="prio" aria-label={`Prioridad ${i.priority_confirmed ?? "sin definir"}`}>{i.priority_confirmed ?? "–"}</span>
+                  <span className={`prio p${i.priority_confirmed ?? 0}`} aria-label={`Prioridad ${i.priority_confirmed ?? "sin definir"}`}>{i.priority_confirmed ?? "–"}</span>
                   <span className="main">
                     <strong>{i.location_text ?? "Sin ubicación"}</strong>
                     <span className="meta">{i.category?.replaceAll("_", " ") ?? "sin tipo"} · {fmtDateTime(i.created_at)}</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, type ApiError } from "../ui/api";
+import { api, fmtDuration, type ApiError } from "../ui/api";
 
 interface Metric {
   key: string; title: string; start: string; end: string; unit: "min" | "casos"; universe: string; exclusions: string;
@@ -15,7 +15,7 @@ const PERIODS = [
   { label: "Últimos 30 días", hours: 24 * 30 },
 ];
 
-const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "—" : `${v} min`);
+const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "—" : fmtDuration(v));
 
 export default function MetricasPage() {
   const [hours, setHours] = useState(24 * 7);
