@@ -1,4 +1,4 @@
-export type NavIcon = "map" | "zone" | "report" | "more" | "summary" | "river" | "rain" | "forecast" | "reports" | "simulator";
+export type NavIcon = "map" | "zone" | "report" | "more" | "summary" | "river" | "rain" | "forecast" | "reports" | "claims" | "demand" | "simulator";
 
 export interface NavItem {
   href: string;
@@ -11,11 +11,15 @@ export const PANEL_HOME = "/operaciones";
 export const HELP_HREF = "/como-funciona";
 export const EMERGENCY_PHONE = "103";
 export const REPORT_HREF = "/reportar";
+export const CLAIMS_HREF = "/reclamos";
+export const OPS_CLAIMS_HREF = "/operaciones/reclamos";
+export const OPS_DEMAND_HREF = "/operaciones/demanda";
 
 export const RESIDENTS_TABS: readonly NavItem[] = [
-  { href: RESIDENTS_HOME, label: "Mapa", icon: "map" },
+  { href: RESIDENTS_HOME, label: "Ahora", icon: "map" },
   { href: "/zona", label: "Mi zona", icon: "zone" },
   { href: REPORT_HREF, label: "Reportar", icon: "report" },
+  { href: CLAIMS_HREF, label: "Reclamos", icon: "reports" },
   { href: "/mas", label: "Más", icon: "more" },
 ];
 
@@ -24,12 +28,14 @@ export const PANEL_SECTIONS: readonly NavItem[] = [
   { href: "/operaciones/rio", label: "Río", icon: "river" },
   { href: "/operaciones/lluvia", label: "Lluvia", icon: "rain" },
   { href: "/operaciones/pronostico", label: "Pronóstico", icon: "forecast" },
-  { href: "/operaciones/reportes", label: "Reportes", icon: "reports" },
+  { href: OPS_CLAIMS_HREF, label: "Reclamos", icon: "claims" },
+  { href: OPS_DEMAND_HREF, label: "Demanda", icon: "demand" },
   { href: "/operaciones/simulador", label: "Simulador", icon: "simulator" },
 ];
 
 export const LEGACY_REDIRECTS: readonly { source: string; destination: string; permanent: true }[] = [
   { source: "/predicciones", destination: "/operaciones/pronostico", permanent: true },
+  { source: "/operaciones/reportes", destination: "/operaciones/reclamos", permanent: true },
   { source: "/api/estado", destination: "/api/status", permanent: true },
   { source: "/api/predicciones", destination: "/api/predictions", permanent: true },
   { source: "/api/recomendaciones", destination: "/api/recommendations", permanent: true },

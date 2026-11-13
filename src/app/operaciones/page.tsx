@@ -10,6 +10,7 @@ import { rainTiles, networkAndReportTiles, riverTiles } from "@/components/panel
 import { Provenance } from "@/components/Provenance";
 import { Workspace } from "@/components/shell/Workspace";
 import { WeatherLine } from "@/components/WeatherBadge";
+import { OPS_CLAIMS_HREF } from "@/lib/navigation";
 import { loadPanel } from "@/lib/panelData";
 import { riskLabel } from "@/lib/risk";
 import { statusTitle } from "@/lib/residents";
@@ -30,7 +31,7 @@ export default async function SummaryPage() {
   const figures: HeroFigure[] = [
     { label: "Río en Rosario", value: kpis.river?.current ?? null, decimals: 2, unit: "m", detail: margin === null ? "sin umbral de alerta" : `${margin.toFixed(2)} m a la alerta` , tone: margin !== null && margin <= MARGIN_WARNING_M ? "watch" : "neutral" },
     { label: "Lluvia 48 h", value: balance?.expected48h ?? null, decimals: 1, unit: "mm", detail: balance ? `${balance.fallen24h.toFixed(1)} mm cayeron en 24 h` : "pronóstico no disponible", tone: balance && balance.expected48h >= HEAVY_48H_MM ? "watch" : "neutral" },
-    { label: "Reportes 24 h", value: kpis.reports?.active ?? null, detail: kpis.reports ? `${kpis.reports.last6h} en las últimas 6 h` : "consulta no disponible" },
+    { label: "Reclamos abiertos · 24 h", value: kpis.reports?.active ?? null, detail: kpis.reports ? `${kpis.reports.last6h} en las últimas 6 h` : "consulta no disponible" },
     { label: "Para hacer ahora", value: urgent, detail: recommendations.length === 1 ? "1 sugerencia en total" : `${recommendations.length} sugerencias en total`, tone: urgent ? "critical" : "neutral" },
   ];
 
@@ -57,7 +58,7 @@ export default async function SummaryPage() {
               </PulseCard>
               <PulseCard href="/operaciones/lluvia" title="Lluvia" value={rain?.peakWindow ? rain.peakWindow.millimeters.toFixed(1) : "—"} unit="mm / 2 h" detail={rain?.peakWindow ? "pico de las próximas horas" : "sin pico calculable"} accent="var(--water)" />
               <PulseCard href="/operaciones/pronostico" title="Pronóstico" value={flooding ? flooding.cityExpected.toFixed(flooding.cityExpected < 10 ? 1 : 0) : "—"} unit="anegamientos" detail={flooding ? `esperados en ${flooding.windowDays} días · exploratorio` : "modelo no disponible"} accent="var(--watch)" />
-              <PulseCard href="/operaciones/reportes" title="Reportes" value={kpis.reports ? String(kpis.reports.active) : "—"} unit="activos" detail={kpis.reports?.byDistrict[0] ? `más en ${kpis.reports.byDistrict[0].district.toLowerCase()}` : "ningún distrito con reportes"} accent="var(--critical)" />
+              <PulseCard href={OPS_CLAIMS_HREF} title="Reclamos" value={kpis.reports ? String(kpis.reports.active) : "—"} unit="abiertos · 24 h" detail={kpis.reports?.byDistrict[0] ? `más en ${kpis.reports.byDistrict[0].district.toLowerCase()} · tomar y resolver` : "ningún distrito con reclamos abiertos"} accent="var(--critical)" />
             </PulseGrid>
           </PanelSection>
 
@@ -93,7 +94,7 @@ export default async function SummaryPage() {
                 Río: variaciones sobre la serie diaria del INA; el percentil compara la altura de hoy con los últimos 210 días; el ritmo es una recta de
                 mínimos cuadrados sobre 14 días. Lluvia caída: horas pasadas del modelo de Open-Meteo, no un pluviómetro de Rosario. Mes en curso:
                 archivo de Open-Meteo con fecha de cobertura contra la referencia histórica del mismo mes. Aguas arriba: margen = alerta − altura; se excluyen lecturas de más de 48 h.
-                Reportes: los cargados por vecinos en las últimas 24 h, ubicados por distrito. Todo en JSON en <span className="readout">/api/kpis</span>.
+                Reclamos: los abiertos (sin resolver ni descartar) cargados por vecinos en las últimas 24 h, ubicados por distrito; el historial completo y la gestión están en Reclamos. Todo en JSON en <span className="readout">/api/kpis</span>.
               </p>
             </DocsSection>
             <DocsSection title="Fuentes y última consulta">

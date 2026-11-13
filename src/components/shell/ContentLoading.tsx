@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-const PAGE_ROUTES = new Set(["/operaciones/rio", "/operaciones/lluvia", "/mas"]);
+const PAGE_ROUTES = new Set(["/operaciones/rio", "/operaciones/lluvia", "/operaciones/demanda", "/mas"]);
 
 const SUBJECTS: Record<string, string> = {
   "/": "el mapa",
@@ -13,7 +13,8 @@ const SUBJECTS: Record<string, string> = {
   "/operaciones/rio": "el río",
   "/operaciones/lluvia": "la lluvia",
   "/operaciones/pronostico": "el pronóstico",
-  "/operaciones/reportes": "los reportes",
+  "/operaciones/reclamos": "los reclamos",
+  "/operaciones/demanda": "la demanda estimada",
   "/operaciones/simulador": "el simulador",
 };
 

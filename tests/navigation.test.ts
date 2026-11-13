@@ -27,7 +27,7 @@ test("the active section respects roots and sub-routes", () => {
   assert.equal(activeItem(PANEL_SECTIONS, "/operaciones/pronostico")?.label, "Pronóstico");
   assert.equal(activeItem(PANEL_SECTIONS, "/operaciones")?.label, "Resumen");
   assert.equal(activeItem(PANEL_SECTIONS, "/operaciones/")?.label, "Resumen");
-  assert.equal(activeItem(RESIDENTS_TABS, "/")?.label, "Mapa");
+  assert.equal(activeItem(RESIDENTS_TABS, "/")?.label, "Ahora");
   assert.equal(activeItem(RESIDENTS_TABS, "/operaciones"), undefined);
   assert.equal(isActive(PANEL_SECTIONS[0], "/operaciones/pronostico"), false);
 });
