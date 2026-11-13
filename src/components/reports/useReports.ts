@@ -31,7 +31,7 @@ export function howLongAgo(iso: string): string {
 }
 
 export async function fetchReports(): Promise<Report[]> {
-  const response = await fetch(API, { cache: "no-store" });
+  const response = await fetch(`${API}?window=active`, { cache: "no-store" });
   const data = (await response.json()) as { ok: boolean; reports?: Report[] };
   if (!response.ok || !data.ok || !Array.isArray(data.reports)) throw new Error("Reportes no disponibles");
   return data.reports;

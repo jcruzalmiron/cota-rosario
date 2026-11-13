@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { EMPTY_DRAFT, draftFromQuery, reportHrefFor } from "../src/lib/reportFlow";
 import { reportsNear } from "../src/lib/reportTypes";
 
-const report = (id: string, lat: number, lon: number, createdAt = "2026-10-24T05:00:00Z") => ({ id, lat, lon, type: "street" as const, description: "", createdAt, confirmations: 0 });
+const report = (id: string, lat: number, lon: number, createdAt = "2026-10-24T05:00:00Z") => ({ id, lat, lon, type: "street" as const, description: "", createdAt, confirmations: 0, status: "new" as const, statusAt: createdAt, district: null, timeline: [] });
 
 test("report link carries the searched point and its label", () => {
   const href = reportHrefFor({ lat: -32.952912345, lon: -60.631234567, label: "Mendoza 512, Centro" });

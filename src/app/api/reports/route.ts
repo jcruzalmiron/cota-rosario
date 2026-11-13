@@ -1,4 +1,4 @@
-import { createReport, listReports, ReportError, REPORT_TTL_HOURS, type NewReportInput } from "@/lib/reports";
+import { createReport, listReports, parseReportFilter, queryReports, ReportError, REPORT_TTL_HOURS, type NewReportInput } from "@/lib/reports";
 import { BodyTooLargeError, clientIp, readJsonBody } from "@/lib/requestGuard";
 
 export const dynamic = "force-dynamic";
@@ -16,10 +16,23 @@ function errorResponse(error: unknown): Response {
   return Response.json({ ok: false, error: "No se pudo procesar el reporte." }, { status: 500 });
 }
 
-export async function GET() {
+const NO_STORE = { "cache-control": "no-store" };
+
+/**
+ * Sin parámetros: reclamos cargados hoy (día argentino). Con from, to, status o type: ese rango.
+ * Con window=active: los abiertos de las últimas REPORT_TTL_HOURS, que es lo que dibuja el mapa.
+ */
+export async function GET(request: Request) {
   try {
-    const reports = await listReports();
-    return Response.json({ ok: true, windowHours: REPORT_TTL_HOURS, reports }, { headers: { "cache-control": "no-store" } });
+    const params = new URL(request.url).searchParams;
+    const window = params.get("window");
+    if (window !== null) {
+      if (window !== "active" || [...params.keys()].some((key) => key !== "window")) {
+        return Response.json({ ok: false, error: "Parámetro window inválido: sólo acepta active, sin otros filtros." }, { status: 400 });
+      }
+      return Response.json({ ok: true, windowHours: REPORT_TTL_HOURS, reports: await listReports() }, { headers: NO_STORE });
+    }
+    return Response.json({ ok: true, ...(await queryReports(parseReportFilter(params))) }, { headers: NO_STORE });
   } catch (error: unknown) {
     return errorResponse(error);
   }

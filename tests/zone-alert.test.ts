@@ -63,7 +63,7 @@ test("assessRisk aplica reportes por zona y el simulador usa las mismas reglas s
 test("los reportes se agrupan por la zona que los contiene; los de afuera no cuentan", () => {
   const square: Polygon = { type: "Polygon", coordinates: [[[-60.7, -33], [-60.6, -33], [-60.6, -32.9], [-60.7, -32.9], [-60.7, -33]]] };
   const collection: FeatureCollection<Polygon, Record<string, string>> = { type: "FeatureCollection", features: [{ type: "Feature", geometry: square, properties: { zone: "2" } }] };
-  const report = (lat: number, lon: number, type: Report["type"], confirmations = 0): Report => ({ id: `${lat}${lon}${type}`, lat, lon, type, description: "", createdAt: "2026-11-04T12:00:00.000Z", confirmations });
+  const report = (lat: number, lon: number, type: Report["type"], confirmations = 0): Report => ({ id: `${lat}${lon}${type}`, lat, lon, type, description: "", createdAt: "2026-11-04T12:00:00.000Z", confirmations, status: "new", statusAt: "2026-11-04T12:00:00.000Z", district: null, timeline: [] });
   const grouped = reportsByZone([report(-32.95, -60.65, "home", 2), report(-32.95, -60.66, "street"), report(-32.5, -60.65, "home")], collection);
   assert.deepEqual(grouped, { "2": { count: 2, homes: 1, confirmations: 2 } });
 });

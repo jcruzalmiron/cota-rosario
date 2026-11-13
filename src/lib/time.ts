@@ -20,10 +20,29 @@ export function argentinaDateTime(iso: string): string {
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date).replace(",", "");
 }
 
+const dayFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: ARGENTINA_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" });
+const stampFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: ARGENTINA_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
 export function argentinaDay(now = Date.now()): string {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: ARGENTINA_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(now));
+  const parts = dayFormatter.formatToParts(new Date(now));
   const get = (type: string) => parts.find((part) => part.type === type)!.value;
   return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+/** Fecha y hora argentinas ordenables, "AAAA-MM-DD HH:mm", para exportaciones. */
+export function argentinaStamp(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = stampFormatter.formatToParts(date);
+  const get = (type: string) => parts.find((part) => part.type === type)!.value;
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
+}
+
+/** Verdadero si el texto es un día calendario real con formato AAAA-MM-DD. */
+export function isCalendarDay(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const time = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value;
 }
 
 export function addCalendarDays(day: string, days: number): string {

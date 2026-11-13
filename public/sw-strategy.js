@@ -2,7 +2,7 @@
   var STATIC_PREFIXES = ["/_next/static/", "/icons/", "/logos/"];
   var REVALIDATE_PREFIXES = ["/data/"];
   var NETWORK_FIRST_PREFIXES = ["/api/"];
-  var NEVER_CACHE_PREFIXES = ["/api/reports/", "/_next/data/"];
+  var NEVER_CACHE_PREFIXES = ["/api/reports/", "/api/ops/", "/_next/data/"];
 
   function startsWithAny(pathname, prefixes) {
     return prefixes.some(function (prefix) {
