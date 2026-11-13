@@ -9,6 +9,7 @@ import { ReportStepper } from "@/components/reports/ReportStepper";
 import { useNearestAddress } from "@/components/reports/useNearestAddress";
 import { ReportTypePicker } from "@/components/reports/ReportTypePicker";
 import { fetchReports, howLongAgo } from "@/components/reports/useReports";
+import { saveMyReport } from "@/components/residents/claims/useClaims";
 import { Workspace } from "@/components/shell/Workspace";
 import { EMERGENCY_PHONE } from "@/lib/navigation";
 import { geocode } from "@/lib/placeReader";
@@ -30,12 +31,12 @@ const TITLES: Record<ReportStep, string> = {
 };
 
 const SUBTITLES: Record<ReportStep, string> = {
-  type: "Elegí lo que más se parece. Tu aviso aparece en el mapa para los vecinos y el panel de operaciones.",
+  type: "Elegí lo que más se parece. Tu aviso les llega a operaciones y a los vecinos, y después podés seguir cómo lo atienden.",
   place: "Movimos el pin a tu ubicación si la compartiste. Arrastralo, tocá el mapa o buscá la dirección.",
   detail: "Un detalle ayuda a quien lo lee. Es opcional.",
 };
 
-type Submission = { status: "editing" } | { status: "sending" } | { status: "sent" } | { status: "error"; message: string };
+type Submission = { status: "editing" } | { status: "sending" } | { status: "sent"; tracked: boolean } | { status: "error"; message: string };
 
 function ChangeLink({ onClick }: { onClick: () => void }) {
   return (
@@ -138,10 +139,16 @@ export function ReportFlow({ initialDraft = EMPTY_DRAFT }: { initialDraft?: Repo
     setSubmission({ status: "sending" });
     try {
       const response = await fetch(API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      setSubmission(response.ok && data.ok ? { status: "sent" } : { status: "error", message: data.error ?? "No se pudo enviar el reporte." });
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; report?: { id?: unknown } };
+      if (response.ok && data.ok) {
+        // El identificador queda sólo en este dispositivo: con él se sigue el estado en Reclamos.
+        const id = data.report?.id;
+        setSubmission({ status: "sent", tracked: typeof id === "string" && saveMyReport(id) });
+      } else {
+        setSubmission({ status: "error", message: data.error ?? "No se pudo enviar el reporte." });
+      }
     } catch {
-      setSubmission({ status: "error", message: navigator.onLine ? "No se pudo enviar el reporte. Probá de nuevo." : "Sin conexión: el reporte no se envió. Probá cuando vuelva la señal." });
+      setSubmission({ status: "error", message: navigator.onLine ? "No se pudo enviar el reporte. Probá de nuevo." : "Sin conexión: el reporte no se envió. Probá cuando vuelva la conexión." });
     }
   };
 
@@ -169,13 +176,13 @@ export function ReportFlow({ initialDraft = EMPTY_DRAFT }: { initialDraft?: Repo
       <p className="pointer-events-none rounded-full border border-rule bg-panel/90 px-4 py-2 text-sm text-ink shadow-lg backdrop-blur">Tocá el mapa donde está el agua</p>
     ) : reports.length && step === "type" ? (
       <p className="pointer-events-none rounded-full border border-rule bg-panel/90 px-4 py-2 text-xs text-ink-soft shadow-lg backdrop-blur">
-        {reports.length} {reports.length === 1 ? "reporte activo" : "reportes activos"} en las últimas {REPORT_TTL_HOURS} h
+        {reports.length} {reports.length === 1 ? "reporte sin resolver" : "reportes sin resolver"} en las últimas {REPORT_TTL_HOURS} h
       </p>
     ) : null;
 
   const rail =
     submission.status === "sent" ? (
-      <ReportSent onAnother={restart} />
+      <ReportSent onAnother={restart} tracked={submission.tracked} />
     ) : (
       <div className="flex min-h-full flex-col">
         <header className="px-5 pb-2 pt-5">
@@ -302,7 +309,7 @@ export function ReportFlow({ initialDraft = EMPTY_DRAFT }: { initialDraft?: Repo
                 </span>
               </label>
               <p className="text-xs leading-relaxed text-ink-faint">
-                Se publica sin tu nombre durante {REPORT_TTL_HOURS} horas y otros vecinos pueden confirmarlo. Si hay riesgo para personas, llamá a Defensa Civil al{" "}
+                Se publica sin tu nombre. Operaciones lo recibe, otros vecinos pueden confirmarlo y vos podés seguir cómo lo atienden en Reclamos. Si hay riesgo para personas, llamá a Defensa Civil al{" "}
                 <a href={`tel:${EMERGENCY_PHONE}`} className="text-ink underline decoration-rule underline-offset-4">
                   {EMERGENCY_PHONE}
                 </a>

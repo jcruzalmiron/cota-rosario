@@ -1,143 +1,66 @@
-import Link from "next/link";
-import { Workspace } from "@/components/shell/Workspace";
-import { HELP_HREF } from "@/lib/navigation";
-import { tipsFor, statusTitle } from "@/lib/residents";
-import { QuickActions } from "@/components/residents/QuickActions";
-import { Docs, DocsSection } from "@/components/Docs";
 import { FloodMap } from "@/components/FloodMap";
-import { Provenance } from "@/components/Provenance";
-import { RainStrip } from "@/components/RainStrip";
-import { RiverGauge } from "@/components/RiverGauge";
-import { SourceDown } from "@/components/SourceDown";
-import { WeatherLine } from "@/components/WeatherBadge";
-import { riskColor } from "@/components/status";
-import { DataStatus } from "@/components/DataStatus";
-import { loadStatus } from "@/lib/status";
-import { riskLabel } from "@/lib/risk";
+import { AnswerCard } from "@/components/residents/home/AnswerCard";
+import { ConditionLines } from "@/components/residents/home/ConditionLines";
+import { HowWeCalculate } from "@/components/residents/home/HowWeCalculate";
+import { OfficialAlerts } from "@/components/residents/home/OfficialAlerts";
+import { TodayClaims } from "@/components/residents/home/TodayClaims";
+import { Workspace } from "@/components/shell/Workspace";
+import { ago } from "@/lib/claims";
+import { EMERGENCY_PHONE } from "@/lib/navigation";
 import { sourceSignals } from "@/lib/placeSignals";
-import { ZoneOutlook } from "@/components/ZoneOutlook";
+import type { AlertsSnapshot } from "@/lib/provincial";
+import { parseReportFilter, queryReports } from "@/lib/reports";
+import type { ReportCounts } from "@/lib/reportTypes";
+import { rainLine, residentAnswer, riverLine, streamLines, type ConditionLine } from "@/lib/residents";
+import { loadStatus } from "@/lib/status";
 
 export const dynamic = "force-dynamic";
 
+/** Reclamos cargados hoy (día argentino). Si el registro no se puede leer devuelve `null`: no se muestra un cero. */
+async function todayCounts(): Promise<ReportCounts | null> {
+  try {
+    return (await queryReports(parseReportFilter(new URLSearchParams()))).counts;
+  } catch (error: unknown) {
+    console.error("Today's claims unavailable:", error instanceof Error ? error.message : "Error");
+    return null;
+  }
+}
+
+function alertsLine(alerts: AlertsSnapshot | null, now: number): ConditionLine[] {
+  // Con alertas vigentes o sin poder consultarlas ya hay un aviso propio más arriba.
+  if (!alerts || alerts.items.length > 0) {
+    return [];
+  }
+  return [{ id: "alerts", name: "Alertas oficiales", value: "ninguna", meaning: "El Servicio Meteorológico Nacional no tiene alertas vigentes para Rosario.", freshness: `revisado ${ago(alerts.fetchedAt, now)}`, tone: "calm" }];
+}
+
 export default async function ResidentsPage() {
-  const status = await loadStatus();
-  const { risk, river, rain, weather, failures } = status;
-  const tips = tipsFor(risk);
-  const failureOf = (source: string) => failures.find((failure) => failure.source === source);
-  const title = statusTitle(risk.level);
+  const [status, counts] = await Promise.all([loadStatus(), todayCounts()]);
+  const { risk, river, rain, alerts, streams } = status;
+  const now = Date.parse(risk.assessedAt);
+  const answer = residentAnswer({ risk, river, rain, alerts, now });
+  const lines = [...alertsLine(alerts, now), riverLine(risk, river, now), rainLine(risk, rain, now), ...streamLines(streams, now)];
 
   return (
     <Workspace
-    canvas={<FloodMap zones={risk.zones} signals={sourceSignals(risk, river, rain)} searcher reports report />}
-    rail={
-      <div className="flex flex-col">
-        <WeatherLine weather={weather} />
-        <section className="px-5 py-6 sm:px-5">
-          <p className="meta">Rosario · ahora{risk.incomplete ? " · evaluación parcial" : ""}</p>
-          <h1 className="mt-2 flex items-start gap-3 text-2xl font-semibold leading-tight tracking-tight text-ink">
-            <span
-              className="mt-2.5 size-2.5 shrink-0 rounded-full"
-              style={{ background: riskColor(risk.level) }}
-              aria-hidden="true"
-            />
-            <span>{title}</span>
-          </h1>
-          <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">{risk.reason}</p>
-          <QuickActions />
-        </section>
-
-        <DataStatus status={status} />
-
-        <section className="hairline flex flex-col">
-          {risk.factors.map((factor) => (
-            <div key={factor.id} className="hairline flex flex-col gap-1.5 px-5 py-4 first:border-t-0 sm:px-5">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-sm text-ink">{factor.title}</h2>
-                <span className="flex items-center gap-1.5 text-xs">
-                  <span
-                    className="size-1.5 rounded-full"
-                    style={{ background: riskColor(factor.level) }}
-                    aria-hidden="true"
-                  />
-                  <span className="text-ink-soft">{factor.available ? riskLabel(factor.level) : "sin evaluación"}</span>
-                </span>
-              </div>
-              <p className="readout text-sm text-ink">{factor.measured}</p>
-              <p className="text-xs leading-relaxed text-ink-soft">{factor.detail}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="hairline px-5 py-6 sm:px-5">
-          <h2 className="meta">Zonas oficiales · próximas 48 h</h2>
-          <p className="mt-1 text-xs leading-relaxed text-ink-faint">Grado de cada zona según la lluvia prevista hora por hora. El río y los reportes cuentan como están ahora.</p>
-          <div className="mt-4">
-            <ZoneOutlook zones={risk.zones} />
-          </div>
-        </section>
-
-        <section className="hairline px-5 py-6 sm:px-5">
-          <h2 className="meta">El río</h2>
-          <div className="mt-4">{river ? <RiverGauge river={river} /> : <SourceDown failure={failureOf("ina")!} />}</div>
-        </section>
-
-        <section className="hairline px-5 py-6 sm:px-5">
-          <h2 className="meta">La lluvia</h2>
-          <div className="mt-4">{rain ? <RainStrip rain={rain} /> : <SourceDown failure={failureOf("openMeteo")!} />}</div>
-        </section>
-
-        <section className="hairline px-5 py-6 sm:px-5">
-          <h2 className="meta">Qué conviene hacer</h2>
-          <ul className="mt-4 flex flex-col gap-3">
-            {tips.map((tip) => (
-              <li key={tip} className="flex gap-3 text-sm leading-relaxed text-ink-soft">
-                <span className="mt-2 h-px w-3 shrink-0 bg-ink-faint" aria-hidden="true" />
-                {tip}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <Docs>
-          <DocsSection title="Cómo se decide el nivel">
-            <ul className="flex flex-col gap-2 text-xs leading-relaxed text-ink-soft">
-              {risk.factors.map((factor) => (
-                <li key={factor.id}>
-                  <span className="text-ink">{factor.title}:</span> {factor.threshold} · {factor.official ? "umbral oficial" : "umbral estimado por este panel"}
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs leading-relaxed text-ink-soft">
-              El nivel general es el peor de los dos factores. Cada zona oficial del Ludueña y el Saladillo tiene un grado de 0 a 5: la base es el
-              pronóstico regional de lluvia concentrada; suma un paso si el mapa municipal de riesgo climático la marca más sensible, otro si el
-              Paraná está en alerta mientras llueve (supuesto a validar) y los reportes vecinales activos dentro de la zona la suben. El Paraná solo
-              no pinta los arroyos. Sin pronóstico ni reportes, las zonas quedan en gris y conservan su exposición. Criterios provisorios, sin
-              calibrar.
-            </p>
-          </DocsSection>
-          <DocsSection title="De dónde sale cada número">
-            <p className="text-xs leading-relaxed text-ink-soft">Las lecturas publicadas, los pronósticos y los mapas tienen su propia fecha y cobertura. Consultá el origen y el método de cada dato.</p>
-            <Provenance
-              stamps={[
-                { id: "ina", fetchedAt: river?.fetchedAt, failure: failureOf("ina") },
-                { id: "openMeteo", fetchedAt: rain?.fetchedAt, failure: failureOf("openMeteo") },
-              ]}
-            />
-            <a href="/api/status" className="readout inline-block text-xs text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink">
-              GET /api/status · el cruce completo en JSON
+      sheetOpen
+      canvas={<FloodMap zones={risk.zones} signals={sourceSignals(risk, river, rain)} searcher reports report />}
+      rail={
+        <div className="flex flex-col">
+          <AnswerCard answer={answer} assessedAt={risk.assessedAt} />
+          <OfficialAlerts alerts={alerts} now={now} />
+          <TodayClaims counts={counts} />
+          <ConditionLines lines={lines} />
+          <HowWeCalculate status={status} now={now} />
+          <p className="hairline px-5 py-5 text-sm leading-relaxed text-ink-soft">
+            Si hay riesgo para personas, llamá a Defensa Civil al{" "}
+            <a href={`tel:${EMERGENCY_PHONE}`} className="font-medium text-ink underline decoration-rule underline-offset-4">
+              {EMERGENCY_PHONE}
             </a>
-          </DocsSection>
-        </Docs>
-
-        <p className="hairline px-5 py-6 text-xs leading-relaxed text-ink-faint sm:px-5">
-          Ante una emergencia, Defensa Civil 103.{" "}
-          <Link href={HELP_HREF} className="underline decoration-rule underline-offset-4 hover:text-ink">
-            Cómo funciona Cota
-          </Link>
-          .
-        </p>
-      </div>
-    }
+            . Cota informa; no reemplaza los avisos oficiales.
+          </p>
+        </div>
+      }
     />
   );
 }

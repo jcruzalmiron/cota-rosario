@@ -13,7 +13,7 @@ const CHIP: Record<Exclude<ContributionSource, "lluvia">, string> = {
 export function ZoneOutlook({ zones }: { zones: ZoneAssessment[] }) {
   const graded = zones.filter((zone) => zone.grade !== null);
   if (!graded.length) {
-    return <p className="text-sm leading-relaxed text-ink-soft">Sin pronóstico vigente ni reportes: las zonas conservan su exposición, pero no hay grado para mostrar.</p>;
+    return <p className="text-sm leading-relaxed text-ink-soft">No tenemos un pronóstico de lluvia vigente ni reportes de vecinos, así que no podemos decir cómo va a estar cada zona. Siguen siendo áreas donde se puede juntar agua.</p>;
   }
   // Las zonas con el mismo grado, los mismos motivos y la misma evolución se muestran juntas.
   const groups = new Map<string, ZoneAssessment[]>();
@@ -35,7 +35,7 @@ export function ZoneOutlook({ zones }: { zones: ZoneAssessment[] }) {
               <span className="readout text-sm text-ink">
                 {group.length === 1 ? "Zona" : "Zonas"} {group.map((entry) => entry.zone).join(" · ")}
               </span>
-              <span className="text-sm text-ink-soft">{GRADE_LABEL[zone.grade!]}</span>
+              <span className="text-sm text-ink-soft">{zone.grade === 0 ? "Tranquila" : GRADE_LABEL[zone.grade!]}</span>
               <span className="ml-auto flex flex-wrap justify-end gap-1">
                 {extras.map((item) => (
                   <span key={item.source} className="rounded-full border border-rule px-1.5 py-px text-[0.625rem] leading-tight text-ink-soft" title={item.text}>

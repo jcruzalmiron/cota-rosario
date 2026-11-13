@@ -9,6 +9,12 @@ const DRAG_START_PX = 8;
 const SNAP_TRANSITION = "translate 320ms cubic-bezier(0.32, 0.72, 0, 1)";
 const DESKTOP_QUERY = "(min-width: 1024px)";
 const INTERACTIVE = "a, button, input, textarea, select, summary, label, [role='button']";
+const SHEET_EVENT = "cota:sheet";
+
+/** Abre o contrae el panel inferior del celular desde cualquier componente. En escritorio no hace nada visible. */
+export function requestSheet(open: boolean): void {
+  window.dispatchEvent(new CustomEvent<boolean>(SHEET_EVENT, { detail: open }));
+}
 
 interface BottomSheetProps {
   children: ReactNode;
@@ -85,6 +91,17 @@ export function BottomSheet({ children, requestedOpen }: BottomSheetProps) {
       delete document.documentElement.dataset.sheetOpen;
     };
   }, [open]);
+
+  useEffect(() => {
+    const onRequest = (event: Event) => {
+      const requested = (event as CustomEvent<unknown>).detail;
+      if (typeof requested === "boolean") {
+        setOpen(requested);
+      }
+    };
+    window.addEventListener(SHEET_EVENT, onRequest);
+    return () => window.removeEventListener(SHEET_EVENT, onRequest);
+  }, []);
 
   const sheetHeight = () => sheetRef.current?.offsetHeight ?? 0;
 

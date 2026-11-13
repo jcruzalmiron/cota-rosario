@@ -55,9 +55,9 @@ function Dot({ status, level }: { status: SourceStatus; level: SourceSignal["lev
  */
 export function SourceSignals({ signals, finding, simulated, className = "border-t border-rule px-4 py-3" }: { signals: SourceSignal[]; finding: Finding; simulated: boolean; className?: string }) {
   return (
-    <section className={`flex flex-col gap-3 text-sm ${className}`} aria-label="Exposición y señales del lugar">
+    <section className={`flex flex-col gap-3 text-sm ${className}`} aria-label="Qué tiene este lugar y cómo está ahora">
       <div>
-        <h3 className="meta">Exposición del lugar</h3>
+        <h3 className="meta">Qué tiene este lugar</h3>
         <p className="mt-1 text-ink">
           {finding.inside ? (
             <>
@@ -102,7 +102,7 @@ export function SourceSignals({ signals, finding, simulated, className = "border
       ) : null}
 
       <div>
-        <h3 className="meta">Señales por fuente{simulated ? " · reales, no del escenario" : ""}</h3>
+        <h3 className="meta">Cómo está ahora, dato por dato{simulated ? " · reales, no del escenario" : ""}</h3>
         <ul className="mt-1.5 flex flex-col divide-y divide-rule-soft">
           {signals.map((signal) => {
             const at = when(signal.at);

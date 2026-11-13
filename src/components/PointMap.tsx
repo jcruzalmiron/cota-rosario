@@ -197,10 +197,15 @@ export function PointMap({ points, pin, focus, fitPoints = false, onMapClick, on
 
   return (
     <div className={`absolute inset-0 isolate ${crosshair ? "[&_.leaflet-grab]:cursor-crosshair [&_.leaflet-interactive]:cursor-pointer" : ""}`}>
-      <div ref={container} className="absolute inset-0" />
+      <div ref={container} className="absolute inset-0 bg-ground!" />
       <RainLayer />
+      {!leaflet && !failed ? (
+        <p role="status" className="pointer-events-none absolute inset-x-6 top-[28%] z-[400] mx-auto w-fit rounded-full border border-rule bg-panel/90 px-4 py-2 text-sm text-ink-soft shadow-lg backdrop-blur lg:top-1/2 [html[data-sheet-open=true]_&]:max-lg:hidden">
+          Cargando el mapa…
+        </p>
+      ) : null}
       {failed ? <p className="absolute inset-x-4 top-4 z-[500] rounded-lg border border-rule bg-panel px-4 py-3 text-sm text-ink-soft">No se pudo cargar el mapa. Podés seguir usando el buscador.</p> : null}
-      {overlay ? <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] flex justify-center p-3 sm:p-4">{overlay}</div> : null}
+      {overlay ? <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] flex justify-center p-3 sm:p-4 [html[data-sheet-open=true]_&]:max-lg:hidden">{overlay}</div> : null}
     </div>
   );
 }

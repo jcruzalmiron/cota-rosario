@@ -22,6 +22,7 @@ import { RISK_LABEL, riskLabel, zoneReading, type RiskLevel, type ZoneView } fro
 import { escapeHtml } from "@/lib/html";
 import { loadLeaflet } from "@/lib/leaflet";
 import { RainLayer } from "@/components/rain/RainLayer";
+import { requestSheet } from "@/components/BottomSheet";
 
 const CENTER: [number, number] = [-32.955, -60.66];
 const ZOOM = 12;
@@ -34,6 +35,20 @@ const CLIMATE_OPACITY = 0.75;
 const CLIMATE_COLOR = "#d65c54";
 const ZONE_FILL_OPACITY = 0.18;
 const ZONE_FILL_OPACITY_SIMULATED = 0.32;
+const DESKTOP_QUERY = "(min-width: 1024px)";
+/** Si fallan estos mosaicos sin que cargue ninguno, se avisa que el fondo del mapa no está. */
+const TILE_ERRORS_BEFORE_NOTICE = 4;
+
+type TileState = "loading" | "ready" | "failed";
+
+/** En el celular el panel inferior tapa la base del mapa: se corre la vista para que la ciudad quede en la parte visible. */
+function sheetOffsetPx(): number {
+  if (window.matchMedia(DESKTOP_QUERY).matches) {
+    return 0;
+  }
+  const peek = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sheet-peek")) || 0;
+  return peek / 2;
+}
 const DATA = {
   floodZones: "/data/flood-zones.json",
   terrain: "/data/terrain.json",
@@ -87,6 +102,7 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
   const [terrain, setTerrain] = useState<TerrainMeta | null>(null);
   const [climateRisk, setClimateRisk] = useState<ClimateMeta | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [tiles, setTiles] = useState<TileState>("loading");
   const [showTerrain, setShowTerrain] = useState(false);
   const [showClimate, setShowClimate] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -140,20 +156,62 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
     };
   }, []);
 
+  // El mapa se crea apenas carga Leaflet: el fondo no espera a las áreas inundables.
   useEffect(() => {
-    if (!container.current || !collection) {
+    let cancelled = false;
+
+    loadLeaflet()
+      .then((L) => {
+        if (cancelled || !container.current) {
+          return;
+        }
+        const map = L.map(container.current, { center: CENTER, zoom: ZOOM, zoomControl: false, attributionControl: true });
+        mapRef.current = map;
+        L.control.zoom({ position: "bottomright" }).addTo(map);
+        let failedTiles = 0;
+        let loadedTiles = 0;
+        L.tileLayer(TILES, { attribution: ATTRIBUTION, maxZoom: 18 })
+          .on("tileload", () => {
+            loadedTiles += 1;
+            setTiles("ready");
+          })
+          .on("tileerror", () => {
+            failedTiles += 1;
+            if (loadedTiles === 0 && failedTiles >= TILE_ERRORS_BEFORE_NOTICE) {
+              setTiles("failed");
+            }
+          })
+          .addTo(map);
+        const offset = sheetOffsetPx();
+        if (offset > 0 && map.invalidateSize(false).getSize().y > 0) {
+          map.panBy([0, offset], { animate: false });
+        }
+        setMapReady(true);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+      mapRef.current?.remove();
+      mapRef.current = null;
+      zonesLayerRef.current = null;
+      markerRef.current = null;
+      terrainLayerRef.current = null;
+      climateLayerRef.current = null;
+      setMapReady(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map || !collection) {
       return undefined;
     }
     let cancelled = false;
-
     loadLeaflet().then((L) => {
-      if (cancelled || !container.current) {
+      if (cancelled || mapRef.current !== map) {
         return;
       }
-      const map = L.map(container.current, { center: CENTER, zoom: ZOOM, zoomControl: false, attributionControl: true });
-      mapRef.current = map;
-      L.control.zoom({ position: "bottomright" }).addTo(map);
-      L.tileLayer(TILES, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
       zonesLayerRef.current = L.geoJSON(collection, {
         style: (feature) => zoneStyleRef.current(feature as ZoneFeature | undefined),
         onEachFeature: (feature, layer) => {
@@ -169,24 +227,17 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
           });
         },
       }).addTo(map);
-      setMapReady(true);
     });
-
     return () => {
       cancelled = true;
-      mapRef.current?.remove();
-      mapRef.current = null;
+      zonesLayerRef.current?.remove();
       zonesLayerRef.current = null;
-      markerRef.current = null;
-      terrainLayerRef.current = null;
-      climateLayerRef.current = null;
-      setMapReady(false);
     };
-  }, [collection]);
+  }, [collection, mapReady]);
 
   useEffect(() => {
     zonesLayerRef.current?.setStyle((feature) => zoneStyle(feature as ZoneFeature | undefined));
-  }, [zoneStyle, mapReady]);
+  }, [zoneStyle, mapReady, collection]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -244,6 +295,8 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
   };
 
   const locate = async (findPlace: () => Promise<GeocodedPlace | null>) => {
+    // En el celular el resultado aparece sobre el mapa: se corre el panel para que no lo tape.
+    requestSheet(false);
     setSearching(true);
     setError(null);
     setFinding(null);
@@ -318,8 +371,16 @@ export function FloodMap({ zones, searcher = false, reports = false, report = fa
 
   return (
     <div className="relative isolate h-full w-full">
-      <div ref={container} className="absolute inset-0" />
+      <div ref={container} className="absolute inset-0 bg-ground!" />
       <RainLayer />
+      {tiles === "ready" ? null : (
+        <p
+          role="status"
+          className="pointer-events-none absolute inset-x-6 top-[28%] z-[400] mx-auto w-fit [html[data-sheet-open=true]_&]:max-lg:hidden max-w-full rounded-full border border-rule bg-panel/90 px-4 py-2 text-center text-sm text-ink-soft shadow-lg backdrop-blur lg:top-1/2"
+        >
+          {tiles === "failed" ? "No pudimos cargar el fondo del mapa. Revisá tu conexión; el resto de Cota sigue funcionando." : "Cargando el mapa…"}
+        </p>
+      )}
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] flex flex-col gap-2 p-3 sm:p-4">
         <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ReportGlyph } from "@/components/reports/ReportGlyph";
 import { howLongAgo, type ReportsState } from "@/components/reports/useReports";
-import { REPORT_HREF } from "@/lib/navigation";
+import { CLAIMS_HREF, REPORT_HREF } from "@/lib/navigation";
 import { REPORT_TYPES, REPORT_TTL_HOURS } from "@/lib/reportTypes";
 
 const LIST_LIMIT = 8;
@@ -18,22 +18,22 @@ interface ReportPanelProps {
 
 function countLine(available: boolean | null, total: number): string {
   if (available === null) {
-    return "Consultando aportes…";
+    return "Consultando reportes…";
   }
   if (available === false) {
-    return "Consulta no disponible";
+    return "No se pudieron consultar";
   }
-  return total === 0 ? `Ninguno en las últimas ${REPORT_TTL_HOURS} h` : `${total} en las últimas ${REPORT_TTL_HOURS} h`;
+  return total === 0 ? `Ninguno sin resolver en ${REPORT_TTL_HOURS} h` : `${total} sin resolver en ${REPORT_TTL_HOURS} h`;
 }
 
 function emptyLine(available: boolean | null): string {
   if (available === null) {
-    return "Consultando aportes…";
+    return "Consultando reportes…";
   }
   if (available === false) {
-    return "Consulta no disponible; no podemos afirmar que no haya aportes.";
+    return "No pudimos consultar los reportes; no sabemos si hay o no.";
   }
-  return `No hay aportes registrados en ${REPORT_TTL_HOURS} horas. Esto no descarta agua en la zona.`;
+  return `Nadie avisó nada que siga sin resolver en las últimas ${REPORT_TTL_HOURS} horas. Eso no descarta agua en tu cuadra.`;
 }
 
 function ReportList({ status }: { status: ReportsState }) {
@@ -98,6 +98,10 @@ export function ReportPanel({ status, readOnly = false, className = "max-w-xs" }
       {isListOpen ? (
         <div className="max-h-72 overflow-y-auto overscroll-contain border-t border-rule-soft">
           <ReportList status={status} />
+          <Link href={CLAIMS_HREF} className="flex min-h-11 items-center justify-between gap-3 border-t border-rule-soft px-4 text-xs text-ink-soft hover:text-ink">
+            Ver todos los reclamos y cómo siguen
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
       ) : null}
 
