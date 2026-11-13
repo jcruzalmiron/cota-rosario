@@ -1,0 +1,172 @@
+{
+  "estado": "ok",
+  "actualizado": "2026-11-13T11:35:46-03:00",
+  "smn_actualizado": "2026-11-13T10:56:00-03:00",
+  "alertas": [
+    {
+      "evento": "Tormentas fuertes",
+      "nivel": "naranja",
+      "desde": "2026-11-13T09:55:00-03:00",
+      "hasta": "2026-11-13T11:55:00-03:00",
+      "emitida": "2026-11-13T09:55:00-03:00",
+      "corto_plazo": true,
+      "descripcion": "Tormentas fuertes con lluvias intensas, rafagas y ocasional caida de granizo",
+      "instrucciones": [
+        "Retirá o asegurá objetos que puedan ser arrojados por el viento.",
+        "Cerrá y alejate de puertas y ventanas.",
+        "No te refugies debajo de marquesinas, carteles publicitarios, árboles o postes.",
+        "Permanecé en construcciones cerradas como casas, escuelas o edificios públicos.",
+        "Desconectá los electrodomésticos y cortá el suministro eléctrico si ingresa agua.",
+        "Alejate de zonas inundables y no ingreses en calles anegadas.",
+        "Mantenete alejado de artefactos eléctricos y evitá el uso de teléfonos con cable.",
+        "Si estás al aire libre, buscá refugio inmediato en un edificio, casa o vehículo cerrado.",
+        "Para minimizar el riesgo de ser alcanzado por un rayo, no permanezcas en playas, ríos, lagunas o piletas."
+      ],
+      "departamentos": [
+        "General López"
+      ],
+      "localidades": []
+    },
+    {
+      "evento": "Tormentas fuertes",
+      "nivel": "naranja",
+      "desde": "2026-11-13T10:37:00-03:00",
+      "hasta": "2026-11-13T12:37:00-03:00",
+      "emitida": "2026-11-13T10:37:00-03:00",
+      "corto_plazo": true,
+      "descripcion": "Tormentas fuertes con lluvias intensas, rafagas y caida de granizo",
+      "instrucciones": [
+        "Retirá o asegurá objetos que puedan ser arrojados por el viento.",
+        "Cerrá y alejate de puertas y ventanas.",
+        "No te refugies debajo de marquesinas, carteles publicitarios, árboles o postes.",
+        "Permanecé en construcciones cerradas como casas, escuelas o edificios públicos.",
+        "Desconectá los electrodomésticos y cortá el suministro eléctrico si ingresa agua.",
+        "Alejate de zonas inundables y no ingreses en calles anegadas.",
+        "Mantenete alejado de artefactos eléctricos y evitá el uso de teléfonos con cable.",
+        "Si estás al aire libre, buscá refugio inmediato en un edificio, casa o vehículo cerrado.",
+        "Para minimizar el riesgo de ser alcanzado por un rayo, no permanezcas en playas, ríos, lagunas o piletas."
+      ],
+      "departamentos": [
+        "Constitución",
+        "General López"
+      ],
+      "localidades": []
+    },
+    {
+      "evento": "Tormentas",
+      "nivel": "amarilla",
+      "desde": "2026-11-13T12:00:00-03:00",
+      "hasta": "2026-11-13T23:59:59-03:00",
+      "emitida": "2026-11-13T08:21:56-03:00",
+      "corto_plazo": false,
+      "descripcion": "El área será afectada por tormentas aisladas, algunas fuertes o puntualmente severas. Las mismas podrán estar acompañadas por fuertes precipitaciones en cortos períodos, frecuente actividad eléctrica, ocasional granizo y ráfagas intensas. Se esperan valores de precipitación acumulada entre 20 y 50 mm, que pueden ser superados en forma puntual.",
+      "instrucciones": [
+        "Evitá salir.",
+        "No saques la basura y limpiá desagües y sumideros.",
+        "Desconectá los electrodomésticos y cortá el suministro eléctrico si ingresa agua",
+        "Cerrá y alejate de puertas y ventanas.",
+        "Retirá o asegurá objetos que puedan ser arrastrados por el viento.",
+        "Si estás al aire libre, buscá refugio inmediato en un edificio, casa o vehículo cerrado."
+      ],
+      "localidades": [],
+      "departamentos": [
+        "Caseros",
+        "General López"
+      ]
+    },
+    {
+      "evento": "Tormentas",
+      "nivel": "amarilla",
+      "desde": "2026-11-13T18:00:00-03:00",
+      "hasta": "2026-11-14T05:59:59-03:00",
+      "emitida": "2026-11-13T08:21:56-03:00",
+      "corto_plazo": false,
+      "descripcion": "El área será afectada por tormentas aisladas, algunas fuertes o puntualmente severas. Las mismas podrán estar acompañadas por fuertes precipitaciones en cortos períodos, frecuente actividad eléctrica, ocasional granizo y ráfagas intensas. Se esperan valores de precipitación acumulada entre 20 y 50 mm, que pueden ser superados en forma puntual.",
+      "instrucciones": [
+        "Evitá salir.",
+        "No saques la basura y limpiá desagües y sumideros.",
+        "Desconectá los electrodomésticos y cortá el suministro eléctrico si ingresa agua",
+        "Cerrá y alejate de puertas y ventanas.",
+        "Retirá o asegurá objetos que puedan ser arrastrados por el viento.",
+        "Si estás al aire libre, buscá refugio inmediato en un edificio, casa o vehículo cerrado."
+      ],
+      "localidades": [],
+      "departamentos": [
+        "Belgrano",
+        "Castellanos",
+        "Las Colonias",
+        "San Martín"
+      ]
+    },
+    {
+      "evento": "Tormentas",
+      "nivel": "amarilla",
+      "desde": "2026-11-14T00:00:00-03:00",
+      "hasta": "2026-11-14T17:59:59-03:00",
+      "emitida": "2026-11-13T08:21:56-03:00",
+      "corto_plazo": false,
+      "descripcion": "El área será afectada por tormentas aisladas, algunas fuertes o puntualmente severas. Las mismas podrán estar acompañadas por fuertes precipitaciones en cortos períodos, frecuente actividad eléctrica, ocasional granizo y ráfagas intensas. Se esperan valores de precipitación acumulada entre 20 y 50 mm, que pueden ser superados en forma puntual.",
+      "instrucciones": [
+        "Evitá salir.",
+        "No saques la basura y limpiá desagües y sumideros.",
+        "Desconectá los electrodomésticos y cortá el suministro eléctrico si ingresa agua",
+        "Cerrá y alejate de puertas y ventanas.",
+        "Retirá o asegurá objetos que puedan ser arrastrados por el viento.",
+        "Si estás al aire libre, buscá refugio inmediato en un edificio, casa o vehículo cerrado."
+      ],
+      "localidades": [],
+      "departamentos": [
+        "9 de Julio",
+        "San Cristóbal",
+        "San Justo"
+      ]
+    },
+    {
+      "evento": "Tormentas",
+      "nivel": "amarilla",
+      "desde": "2026-11-14T00:00:00-03:00",
+      "hasta": "2026-11-14T05:59:59-03:00",
+      "emitida": "2026-11-13T08:21:56-03:00",
+      "corto_plazo": false,
+      "descripcion": "El área será afectada por tormentas aisladas, algunas fuertes o puntualmente severas. Las mismas podrán estar acompañadas por fuertes precipitaciones en cortos períodos, frecuente actividad eléctrica, ocasional granizo y ráfagas intensas. Se esperan valores de precipitación acumulada entre 20 y 50 mm, que pueden ser superados en forma puntual.",
+      "instrucciones": [
+        "Evitá salir.",
+        "No saques la basura y limpiá desagües y sumideros.",
+        "Desconectá los electrodomésticos y cortá el suministro eléctrico si ingresa agua",
+        "Cerrá y alejate de puertas y ventanas.",
+        "Retirá o asegurá objetos que puedan ser arrastrados por el viento.",
+        "Si estás al aire libre, buscá refugio inmediato en un edificio, casa o vehículo cerrado."
+      ],
+      "localidades": [],
+      "departamentos": [
+        "Garay",
+        "La Capital",
+        "San Jerónimo"
+      ]
+    },
+    {
+      "evento": "Tormentas",
+      "nivel": "amarilla",
+      "desde": "2026-11-14T06:00:00-03:00",
+      "hasta": "2026-11-14T17:59:59-03:00",
+      "emitida": "2026-11-13T08:21:56-03:00",
+      "corto_plazo": false,
+      "descripcion": "El área será afectada por tormentas aisladas, algunas fuertes o puntualmente severas. Las mismas podrán estar acompañadas por fuertes precipitaciones en cortos períodos, frecuente actividad eléctrica, ocasional granizo y ráfagas intensas. Se esperan valores de precipitación acumulada entre 20 y 50 mm, que pueden ser superados en forma puntual.",
+      "instrucciones": [
+        "Evitá salir.",
+        "No saques la basura y limpiá desagües y sumideros.",
+        "Desconectá los electrodomésticos y cortá el suministro eléctrico si ingresa agua",
+        "Cerrá y alejate de puertas y ventanas.",
+        "Retirá o asegurá objetos que puedan ser arrastrados por el viento.",
+        "Si estás al aire libre, buscá refugio inmediato en un edificio, casa o vehículo cerrado."
+      ],
+      "localidades": [],
+      "departamentos": [
+        "General Obligado",
+        "San Javier",
+        "Vera"
+      ]
+    }
+  ],
+  "fuente": "https://www.smn.gob.ar/alertas"
+}

@@ -15,6 +15,9 @@ export const FRESHNESS = {
   hourlyRain: { freshMs: 10 * MINUTE_MS, staleMs: HOUR_MS, hourly: true },
   weather: { freshMs: 10 * MINUTE_MS, staleMs: HOUR_MS, hourly: false },
   discharge: { freshMs: 6 * HOUR_MS, staleMs: 24 * HOUR_MS, hourly: false },
+  // Las alertas del SMN cambian en minutos (avisos a corto plazo); los arroyos se leen una vez al día o por hora.
+  alerts: { freshMs: 5 * MINUTE_MS, staleMs: 30 * MINUTE_MS, hourly: false },
+  streams: { freshMs: 30 * MINUTE_MS, staleMs: 3 * HOUR_MS, hourly: false },
 } as const satisfies Record<string, FreshnessPolicy>;
 
 interface Entry {

@@ -7,7 +7,7 @@ import type { Kpis } from "../src/lib/kpis";
 import type { Predictions } from "../src/lib/predictions";
 
 test("summary and suggestions never declare calm without data", () => {
-  const status: Status = { risk: assessRisk(null, null), river: null, rain: null, discharge: null, weather: null, failures: [{ source: "ina", message: "Consulta no disponible", at: new Date().toISOString() }] };
+  const status: Status = { risk: assessRisk(null, null), river: null, rain: null, discharge: null, weather: null, alerts: null, streams: null, failures: [{ source: "ina", message: "Consulta no disponible", at: new Date().toISOString() }] };
   const kpis: Kpis = { river: null, upstream: [], network: null, rain: null, reports: null, failures: [], generatedAt: new Date().toISOString() };
   const predictions: Predictions = { byDay: [], flooding: null, rain: null, river: null, failures: [], fetches: {}, validity: { modelsComputedAt: "", civilDefenseUntil: "", historicalRainUntil: 2025, lastRiverReading: null }, generatedAt: new Date().toISOString() };
   const inputs = { status, kpis, predictions };

@@ -48,6 +48,22 @@ export const SOURCES: Record<string, SourceRef> = {
     portal: "https://global-flood.emergency.copernicus.eu",
     license: "CC BY 4.0 · gratuito para uso no comercial",
   },
+  smnAlerts: {
+    id: "smnAlerts",
+    agency: "Servicio Meteorológico Nacional, vía Gobierno de Santa Fe",
+    description: "Alertas meteorológicas oficiales del SMN para el departamento Rosario. Los servicios del SMN no responden sin credenciales (503, 401 y 403 al 13/11/2026), así que se leen de la republicación provincial por departamento",
+    endpoint: "https://www.santafe.gob.ar/ms/elnino/wp-json/elnino/v1/alertas",
+    portal: "https://www.smn.gob.ar/alertas",
+    license: "Datos públicos del SMN, republicados por el Gobierno de Santa Fe · servicio sin documentación pública",
+  },
+  provincialStreams: {
+    id: "provincialStreams",
+    agency: "Gobierno de Santa Fe · Recursos Hídricos e INA",
+    description: "Altura, tendencia y hora de lectura de los arroyos Ludueña y Saladillo. El nivel de alerta se muestra solo en las estaciones donde la fuente lo informa",
+    endpoint: "https://www.santafe.gob.ar/ms/elnino/wp-json/elnino/v1/parana",
+    portal: "https://www.santafe.gob.ar/ms/elnino/",
+    license: "Datos públicos del Gobierno de Santa Fe · servicio sin documentación pública",
+  },
   floodZones: {
     id: "floodZones",
     agency: "Municipalidad de Rosario · Secretaría de Planeamiento",
