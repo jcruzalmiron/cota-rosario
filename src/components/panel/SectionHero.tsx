@@ -41,7 +41,8 @@ const TIMELINE_TICKS = 28;
 
 function pseudoRandom(seed: number): number {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
+  // Redondeado: Math.sin puede diferir en el último bit entre Node y el navegador y romper la hidratación.
+  return Math.round((x - Math.floor(x)) * 1e4) / 1e4;
 }
 
 function Pattern({ pattern }: { pattern: HeroPattern }) {
